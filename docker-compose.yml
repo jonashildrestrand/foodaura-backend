@@ -1,0 +1,36 @@
+services:
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: foodaura
+      MARIADB_USER: foodaura
+      MARIADB_PASSWORD: foodaura
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: foodaura
+      DB_PASSWORD: foodaura
+      DB_NAME: foodaura
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  db_data:
