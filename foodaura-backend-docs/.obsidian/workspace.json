@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Dictionary.md",
-                "mode": "source",
+                "file": "2. Architecture/8. Stored Procedures & Triggers.md",
+                "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Dictionary"
+              "title": "8. Stored Procedures & Triggers"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Dictionary.md",
+                "file": "2. Architecture/8. Stored Procedures & Triggers.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Dictionary"
+              "title": "Backlinks for 8. Stored Procedures & Triggers"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Dictionary.md",
+                "file": "2. Architecture/8. Stored Procedures & Triggers.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Dictionary"
+              "title": "Outgoing links from 8. Stored Procedures & Triggers"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Dictionary.md",
+                "file": "2. Architecture/8. Stored Procedures & Triggers.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Dictionary"
+              "title": "Outline of 8. Stored Procedures & Triggers"
             }
           }
         ]
@@ -185,12 +185,26 @@
   },
   "active": "d7337d55040366f1",
   "lastOpenFiles": [
+    "2. Architecture/13. Database Testing.md",
+    "2. Architecture/12. Database Migrations.md",
+    "2. Architecture/11. Nutritional Calculation.md",
+    "2. Architecture/10. Database Security.md",
+    "2. Architecture/9. Authentication.md",
+    "2. Architecture/7. Database Schema.md",
+    "2. Architecture/1. System Overview.md",
+    "2. Architecture/2. Technology Stack.md",
+    "2. Architecture/3. Module Boundaries.md",
+    "2. Architecture/4. Data Flow.md",
+    "2. Architecture/5. Design Decisions.md",
+    "2. Architecture/6. Infrastructure & Deployment.md",
+    "2. Architecture/8. Stored Procedures & Triggers.md",
     "1. Foodaura/5. User Stories.md",
     "1. Foodaura/4. Features.md",
     "1. Foodaura/3. Target Users.md",
     "1. Foodaura/2. Vision & Goals.md",
     "1. Foodaura/1. What is Foodaura?.md",
     "Dictionary.md",
+    "2. Architecture",
     "1. Product Management/Vision & Goals.md",
     "1. Product Management/4. User Stories.md",
     "1. Product Management/3. Features.md",
@@ -198,25 +212,12 @@
     "1. Product Management/1. Vision & Goals.md",
     "1. Product Management/User Stories.md",
     "1. Product Management/Target Users.md",
-    "1. Product Management/Features.md",
     "2. Design System",
     "3. Technical/Developer Guidelines",
     "3. Technical",
     "1. Foodaura",
-    "What is Foodaura?.md",
-    "Features/Profiles and Households.md",
-    "Features/AI Meal Plans.md",
-    "Architecture/Data Model.md",
     "Features",
-    "Architecture/System Architecture.md",
     "Architecture",
-    "Features/Habits and Check-ins.md",
-    "Features/Recipes.md",
-    "Features/Shopping List.md",
-    "Features/Meal Planning.md",
-    "Development/Getting Started.md",
-    "API/API Overview.md",
-    "Welcome.md",
     "API",
     "Development"
   ]
