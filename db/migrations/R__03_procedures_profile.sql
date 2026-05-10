@@ -18,6 +18,16 @@ CREATE OR REPLACE PROCEDURE sp_profile_upsert(
 )
 SQL SECURITY DEFINER
 BEGIN
+  IF p_age < 1 OR p_age > 120 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'age must be between 1 and 120';
+  END IF;
+  IF p_weight_kg < 10 OR p_weight_kg > 500 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'weight_kg must be between 10 and 500';
+  END IF;
+  IF p_height_cm < 50 OR p_height_cm > 300 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'height_cm must be between 50 and 300';
+  END IF;
+
   INSERT INTO nutritional_profiles
     (id, user_id, biological_sex, age, weight_kg, height_cm, activity_level, goal)
   VALUES

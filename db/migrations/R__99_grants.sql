@@ -33,6 +33,7 @@ GRANT EXECUTE ON PROCEDURE foodaura.sp_mealplan_assign_recipe        TO 'foodaur
 GRANT EXECUTE ON PROCEDURE foodaura.sp_mealplan_clear_slot           TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_mealplan_get_history          TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_mealplan_copy                 TO 'foodaura_backend'@'%';
+GRANT EXECUTE ON PROCEDURE foodaura.sp_mealplan_notify_ready         TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_shoppinglist_derive           TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_shoppinglist_get              TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_shoppinglist_toggle_item      TO 'foodaura_backend'@'%';

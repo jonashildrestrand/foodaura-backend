@@ -1,0 +1,34 @@
+{{ define "title" }}Meal plan{{ end }}
+
+{{ define "main" }}
+{{ template "_topbar" .Topbar }}
+
+{{ if .Stats.MealsPlanned }}
+<div class="fa-card" style="display:flex;gap:32px;align-items:baseline;margin-bottom:24px;padding:16px 24px">
+  <span class="fa-eyebrow">{{ .Stats.MealsPlanned }} meals planned</span>
+  {{ if .Stats.EmptySlots }}<span class="fa-caption">{{ .Stats.EmptySlots }} empty</span>{{ end }}
+  <span class="fa-caption" style="margin-left:auto">{{ .Stats.MembersIn }} members eating in</span>
+</div>
+{{ end }}
+
+<div class="fa-week-grid">
+  {{ range .Days }}
+  <div class="fa-week-col">
+    <div class="fa-week-head">
+      <span class="fa-week-day">{{ .Day }}</span>
+      <span class="fa-week-date">{{ .Date }}</span>
+    </div>
+    {{ range .Slots }}
+      {{ if .Empty }}{{ template "_empty_slot" . }}{{ else }}{{ template "_slot_card" . }}{{ end }}
+    {{ end }}
+    {{ if .DayTotal.Kcal }}
+    <div class="fa-caption" style="padding:4px 4px 0;color:var(--fg-3)">
+      {{ .DayTotal.Kcal }} kcal · {{ .DayTotal.Protein }}g P
+    </div>
+    {{ end }}
+  </div>
+  {{ end }}
+</div>
+{{ end }}
+
+{{ template "_layout" . }}

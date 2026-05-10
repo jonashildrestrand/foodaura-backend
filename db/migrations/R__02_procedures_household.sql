@@ -14,6 +14,13 @@ SQL SECURITY DEFINER
 BEGIN
   DECLARE v_household_id CHAR(36) DEFAULT UUID();
 
+  IF p_name IS NULL OR TRIM(p_name) = '' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'household name is required';
+  END IF;
+  IF p_owner_user_id IS NULL THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'owner_user_id is required';
+  END IF;
+
   INSERT INTO households (id, name, owner_user_id)
   VALUES (v_household_id, p_name, p_owner_user_id);
 
@@ -61,7 +68,16 @@ CREATE OR REPLACE PROCEDURE sp_household_invite(
 )
 SQL SECURITY DEFINER
 BEGIN
-  DECLARE v_invitation_id CHAR(36) DEFAULT UUID();
+  DECLARE v_invitation_id  CHAR(36) DEFAULT UUID();
+  DECLARE v_invitee_id     CHAR(36);
+  DECLARE v_household_name VARCHAR(255);
+
+  IF p_email IS NULL OR p_email NOT LIKE '%@%.%' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'a valid email address is required';
+  END IF;
+  IF p_expires_at IS NULL OR p_expires_at <= NOW() THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'expires_at must be a future datetime';
+  END IF;
 
   -- Only household members can invite
   IF NOT EXISTS (
@@ -74,12 +90,27 @@ BEGIN
   INSERT INTO household_invitations (id, household_id, invited_by_user_id, email, token_hash, expires_at)
   VALUES (v_invitation_id, p_household_id, p_invited_by_user_id, p_email, p_token_hash, p_expires_at);
 
+  -- Notify the invitee if they already have a Foodaura account
+  SELECT id INTO v_invitee_id FROM users WHERE email = p_email LIMIT 1;
+  IF v_invitee_id IS NOT NULL THEN
+    SELECT name INTO v_household_name FROM households WHERE id = p_household_id;
+    CALL sp_notification_create(
+      v_invitee_id,
+      'household_invitation_received',
+      'Household invitation',
+      CONCAT('You have been invited to join ', v_household_name),
+      'household_invitation',
+      v_invitation_id
+    );
+  END IF;
+
   SELECT v_invitation_id AS invitation_id;
 END$$
 
 -- ─── sp_household_accept_invitation ──────────────────────────────────────────
 -- Validate token, add accepting user to household, mark invitation accepted,
--- and create notifications for both the inviter and the new member.
+-- and notify the inviter that their invitation was accepted.
+-- Note: the invitee was already notified when sp_household_invite was called.
 
 CREATE OR REPLACE PROCEDURE sp_household_accept_invitation(
   IN p_token_hash        VARCHAR(255),
@@ -124,16 +155,6 @@ BEGIN
     'household_invitation_accepted',
     'Invitation accepted',
     CONCAT(v_accepting_email, ' has joined ', v_household_name),
-    'household',
-    v_household_id
-  );
-
-  -- Notify new member: they joined a household
-  CALL sp_notification_create(
-    p_accepting_user_id,
-    'household_invitation_received',
-    'You joined a household',
-    CONCAT('You are now a member of ', v_household_name),
     'household',
     v_household_id
   );

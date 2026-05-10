@@ -1,0 +1,35 @@
+{{ define "title" }}Sign in{{ end }}
+
+{{ define "main" }}
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px">
+  <div style="width:100%;max-width:400px">
+    <div style="text-align:center;margin-bottom:40px">
+      <span class="fa-logo-mark" style="width:44px;height:44px;display:inline-flex;margin-bottom:16px"></span>
+      <h1 style="font-size:32px">Welcome back</h1>
+    </div>
+
+    <form method="post" action="/login" class="fa-card" style="display:flex;flex-direction:column;gap:0">
+      <div class="fa-field">
+        <label class="fa-field-label">Email</label>
+        <input class="fa-input" type="email" name="email" required autocomplete="email" placeholder="you@example.com">
+      </div>
+      <div class="fa-field">
+        <label class="fa-field-label">Password</label>
+        <input class="fa-input" type="password" name="password" required autocomplete="current-password">
+      </div>
+      {{ with .Error }}
+      <p style="color:var(--danger);font-size:13px;margin:0 0 12px">{{ . }}</p>
+      {{ end }}
+      <button class="fa-btn fa-btn--primary" type="submit" style="width:100%;justify-content:center">
+        Sign in
+      </button>
+    </form>
+
+    <p style="text-align:center;margin-top:20px;font-size:14px;color:var(--fg-3)">
+      New here? <a href="/onboarding/0">Create an account</a>
+    </p>
+  </div>
+</div>
+{{ end }}
+
+{{ template "_layout" . }}

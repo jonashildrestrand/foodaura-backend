@@ -1,0 +1,41 @@
+{{ define "title" }}{{ .Name }}{{ end }}
+
+{{ define "main" }}
+{{ template "_topbar" .Topbar }}
+
+<div class="fa-house-grid">
+  {{ range .Members }}
+  <div class="fa-card fa-house-card">
+    <div class="fa-house-row">
+      <span class="fa-avatar fa-avatar--lg fa-avatar--{{ .Tint }}">{{ .Initials }}</span>
+      <div>
+        <div class="fa-house-name">{{ .Name }}</div>
+        <div class="fa-house-meta">{{ .Goal }}</div>
+      </div>
+    </div>
+    {{ with .Goal }}<span class="fa-tag">{{ . }}</span>{{ end }}
+  </div>
+  {{ end }}
+</div>
+
+<div class="fa-card">
+  <div class="fa-schedule-head">
+    <h3>Weekly schedule</h3>
+    <span class="fa-caption">Who's eating in each day. Drives recipe scaling.</span>
+  </div>
+  <div class="fa-schedule-grid">
+    <div></div>
+    {{ range .Schedule.Days }}<div class="fa-schedule-day">{{ . }}</div>{{ end }}
+    {{ range .Schedule.Rows }}
+      <div class="fa-schedule-name">{{ .MemberShort }}</div>
+      {{ range .In }}
+        <div class="fa-schedule-cell {{ if . }}is-on{{ end }}">{{ if . }}<i data-lucide="check"></i>{{ else }}—{{ end }}</div>
+      {{ end }}
+    {{ end }}
+  </div>
+</div>
+
+{{ if .InviteOpen }}{{ template "_invite_modal" . }}{{ end }}
+{{ end }}
+
+{{ template "_layout" . }}

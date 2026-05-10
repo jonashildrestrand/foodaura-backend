@@ -270,4 +270,33 @@ BEGIN
   SELECT v_new_plan_id AS meal_plan_id;
 END$$
 
+-- ─── sp_mealplan_notify_ready ────────────────────────────────────────────────
+-- Create a meal_plan_ready notification for the user who requested AI generation.
+-- Called by the backend after the AI service returns and the plan has been saved.
+
+CREATE OR REPLACE PROCEDURE sp_mealplan_notify_ready(
+  IN p_meal_plan_id CHAR(36),
+  IN p_user_id      CHAR(36)
+)
+SQL SECURITY DEFINER
+BEGIN
+  DECLARE v_week_start DATE;
+
+  SELECT week_start_date INTO v_week_start
+  FROM meal_plans WHERE id = p_meal_plan_id;
+
+  IF v_week_start IS NULL THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'meal plan not found';
+  END IF;
+
+  CALL sp_notification_create(
+    p_user_id,
+    'meal_plan_ready',
+    'Your meal plan is ready',
+    CONCAT('Your meal plan for the week of ', v_week_start, ' has been generated'),
+    'meal_plan',
+    p_meal_plan_id
+  );
+END$$
+
 DELIMITER ;

@@ -1,0 +1,9 @@
+{{/* _nutrition_bar.gohtml — NutritionVM: { Protein, Carbs, Fat, Kcal, Dense bool } */}}
+{{ define "_nutrition_bar" }}
+<div class="fa-nut {{ if .Dense }}fa-nut--dense{{ end }}">
+  <span class="fa-nut-item"><span class="fa-nut-dot" style="background:var(--nut-protein)"></span><span class="fa-nut-l">Protein</span><span class="fa-nut-v">{{ .Protein }}g</span></span>
+  <span class="fa-nut-item"><span class="fa-nut-dot" style="background:var(--nut-carbs)"></span><span class="fa-nut-l">Carbs</span><span class="fa-nut-v">{{ .Carbs }}g</span></span>
+  <span class="fa-nut-item"><span class="fa-nut-dot" style="background:var(--nut-fat)"></span><span class="fa-nut-l">Fat</span><span class="fa-nut-v">{{ .Fat }}g</span></span>
+  <span class="fa-nut-kcal">{{ .Kcal }}<small> kcal</small></span>
+</div>
+{{ end }}

@@ -1,0 +1,10 @@
+{{/* _member_chip.gohtml — MemberVM: { Initials, Name, Goal, Tint } */}}
+{{ define "_member_chip" }}
+<span class="fa-member">
+  <span class="fa-avatar fa-avatar--{{ .Tint }}">{{ .Initials }}</span>
+  <span class="fa-member-text">
+    <span class="fa-member-name">{{ .Name }}</span>
+    {{ with .Goal }}<span class="fa-member-goal">{{ . }}</span>{{ end }}
+  </span>
+</span>
+{{ end }}

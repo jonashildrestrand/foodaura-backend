@@ -1,0 +1,27 @@
+{{/* _recipe_card.gohtml — used in Discover and as a hover preview.
+  RecipeCardVM: { ID, Name, Tone, MinutesHandsOn, Servings, Tags []TagVM } */}}
+{{ define "_recipe_card" }}
+<a class="fa-recipe" href="/recipe/{{ .ID }}">
+  <div class="fa-thumb fa-thumb--{{ .Tone }}"></div>
+  <div class="fa-recipe-body">
+    <h3 class="fa-recipe-name">{{ .Name }}</h3>
+    <div class="fa-recipe-meta">{{ .MinutesHandsOn }} min · serves {{ .Servings }}</div>
+    <div class="fa-recipe-tags">
+      {{ range .Tags }}{{ template "_tag" . }}{{ end }}
+    </div>
+  </div>
+</a>
+{{ end }}
+
+{{/* _tag — TagVM: { Tone, Label } */}}
+{{ define "_tag" }}
+<span class="fa-tag fa-tag--{{ .Tone }}">{{ .Label }}</span>
+{{ end }}
+
+{{/* _toast — flash message after a redirect. ToastVM: { Message } */}}
+{{ define "_toast" }}
+<div class="fa-toast">
+  <span class="fa-toast-dot"></span>
+  <span>{{ .Message }}</span>
+</div>
+{{ end }}

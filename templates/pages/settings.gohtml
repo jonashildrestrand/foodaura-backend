@@ -1,0 +1,64 @@
+{{ define "title" }}Settings{{ end }}
+
+{{ define "main" }}
+{{ template "_topbar" .Topbar }}
+
+<div class="fa-set-shell">
+  <aside class="fa-set-rail">
+    {{ range .Sections }}
+    <a class="fa-set-rail-item" href="#{{ .ID }}">
+      <i data-lucide="{{ .Icon }}"></i><span>{{ .Title }}</span>
+    </a>
+    {{ end }}
+  </aside>
+
+  <div class="fa-set-body">
+    {{ range .Sections }}
+    <section id="{{ .ID }}" class="fa-set-section">
+      <header>
+        <h2>{{ .Title }}</h2>
+        {{ with .Sub }}<p>{{ . }}</p>{{ end }}
+      </header>
+      <form class="fa-set-card" method="post" action="/settings/{{ .ID }}">
+        {{ range .Rows }}
+        <div class="fa-set-row">
+          <div class="fa-set-row-l">
+            <div class="fa-set-row-label">{{ .Label }}</div>
+            {{ with .Hint }}<div class="fa-set-row-hint">{{ . }}</div>{{ end }}
+          </div>
+          <div class="fa-set-row-r">{{ template "_set_control" .Control }}</div>
+        </div>
+        {{ end }}
+      </form>
+    </section>
+    {{ end }}
+  </div>
+</div>
+{{ end }}
+
+{{ define "_set_control" }}
+  {{ if eq .Kind "text" }}
+    <input class="fa-input" name="{{ .Name }}" value="{{ .Value }}">
+  {{ else if eq .Kind "toggle" }}
+    <button class="fa-toggle {{ if eq .Value "on" }}is-on{{ end }}" name="{{ .Name }}" value="toggle" type="submit" role="switch" aria-checked="{{ if eq .Value "on" }}true{{ else }}false{{ end }}">
+      <span class="fa-toggle-knob"></span>
+    </button>
+  {{ else if eq .Kind "seg" }}
+    <div class="fa-seg" role="radiogroup">
+      {{ $name := .Name }}{{ $val := .Value }}
+      {{ range .Options }}
+      <label class="fa-seg-opt {{ if eq . $val }}is-on{{ end }}">
+        <input type="radio" name="{{ $name }}" value="{{ . }}" {{ if eq . $val }}checked{{ end }} hidden>{{ . }}
+      </label>
+      {{ end }}
+    </div>
+  {{ else if eq .Kind "button" }}
+    {{ with .Action }}
+    <a class="fa-btn fa-btn--{{ .Variant }}" href="{{ .Href }}">
+      {{ with .Icon }}<i data-lucide="{{ . }}" class="fa-btn-icon"></i>{{ end }}{{ .Label }}
+    </a>
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{ template "_layout" . }}

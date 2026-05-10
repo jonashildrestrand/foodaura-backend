@@ -1,0 +1,49 @@
+{{/*
+  _sidebar.gohtml — primary nav. Receives a SidebarVM:
+    { ActiveRoute string; UnreadNotifs int; CurrentUser { Initials, Name, Goal, Tint } }
+  ActiveRoute is one of: plan, discover, shopping, household, notifications, settings.
+*/}}
+
+{{ define "_sidebar" }}
+<aside class="fa-sidebar">
+  <a class="fa-logo" href="/plan">
+    <span class="fa-logo-mark"><span class="fa-logo-core"></span></span>
+    <span class="fa-logo-word">foodaura</span>
+  </a>
+
+  <nav class="fa-nav">
+    <a class="fa-nav-item {{ if eq .ActiveRoute "plan"      }}is-active{{ end }}" href="/plan">
+      <i data-lucide="calendar-days"></i><span>Meal plan</span>
+    </a>
+    <a class="fa-nav-item {{ if eq .ActiveRoute "discover"  }}is-active{{ end }}" href="/discover">
+      <i data-lucide="utensils"></i><span>Discover</span>
+    </a>
+    <a class="fa-nav-item {{ if eq .ActiveRoute "shopping"  }}is-active{{ end }}" href="/shoppinglist">
+      <i data-lucide="list-checks"></i><span>Shopping list</span>
+    </a>
+    <a class="fa-nav-item {{ if eq .ActiveRoute "household" }}is-active{{ end }}" href="/household">
+      <i data-lucide="users"></i><span>Household</span>
+    </a>
+  </nav>
+
+  <div class="fa-side-foot">
+    <a class="fa-nav-item {{ if eq .ActiveRoute "notifications" }}is-active{{ end }}" href="/notifications">
+      <i data-lucide="bell"></i>
+      <span>Notifications</span>
+      {{ if gt .UnreadNotifs 0 }}<span class="fa-pill">{{ .UnreadNotifs }}</span>{{ end }}
+    </a>
+    <a class="fa-nav-item {{ if eq .ActiveRoute "settings" }}is-active{{ end }}" href="/settings">
+      <i data-lucide="settings-2"></i><span>Settings</span>
+    </a>
+    {{ with .CurrentUser }}
+    <div class="fa-side-user">
+      <span class="fa-avatar fa-avatar--{{ .Tint }}">{{ .Initials }}</span>
+      <div>
+        <div class="fa-side-user-name">{{ .Name }}</div>
+        <div class="fa-side-user-goal">{{ .Goal }}</div>
+      </div>
+    </div>
+    {{ end }}
+  </div>
+</aside>
+{{ end }}

@@ -1,0 +1,19 @@
+{{/* _slot_card.gohtml — filled meal slot in the plan grid.
+  SlotVM: { ID, Meal ("Brk"|"Lun"|"Din"|"Snk"), Name, Kcal, Tone, RecipeURL } */}}
+{{ define "_slot_card" }}
+<a class="fa-slot" href="{{ .RecipeURL }}">
+  <div class="fa-thumb fa-thumb--{{ .Tone }}"></div>
+  <span class="fa-slot-meal">{{ .Meal }}</span>
+  <span class="fa-slot-name">{{ .Name }}</span>
+  <span class="fa-slot-meta">{{ .Kcal }} kcal</span>
+</a>
+{{ end }}
+
+{{/* _empty_slot — placeholder slot. SlotVM with Empty=true: { Meal, AddURL } */}}
+{{ define "_empty_slot" }}
+<a class="fa-slot fa-slot--empty" href="{{ .AddURL }}">
+  <span class="fa-slot-plus"><i data-lucide="plus"></i></span>
+  <span class="fa-slot-meal">{{ .Meal }}</span>
+  <span class="fa-slot-empty-text">Add recipe</span>
+</a>
+{{ end }}

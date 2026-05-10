@@ -1,0 +1,46 @@
+{{ define "title" }}Notifications{{ end }}
+
+{{ define "main" }}
+{{ template "_topbar" .Topbar }}
+
+{{ if or .Today .Week }}
+<form method="post" action="/notifications/mark-all-read" style="margin-bottom:24px">
+  <button class="fa-btn fa-btn--ghost fa-btn--sm" type="submit">
+    <i data-lucide="check-check" class="fa-btn-icon"></i>Mark all as read
+  </button>
+</form>
+{{ end }}
+
+{{ if .Today }}
+<div class="fa-notif-section">
+  <h3 class="fa-notif-group">Today</h3>
+  <ul class="fa-notif-list">{{ range .Today }}{{ template "_notif_row" . }}{{ end }}</ul>
+</div>
+{{ end }}
+
+{{ if .Week }}
+<div class="fa-notif-section">
+  <h3 class="fa-notif-group">Earlier this week</h3>
+  <ul class="fa-notif-list">{{ range .Week }}{{ template "_notif_row" . }}{{ end }}</ul>
+</div>
+{{ end }}
+{{ end }}
+
+{{ define "_notif_row" }}
+<li class="fa-notif {{ if .Unread }}is-unread{{ end }}">
+  <span class="fa-notif-icon fa-notif-icon--{{ .Tint }}"><i data-lucide="{{ .Icon }}"></i></span>
+  <div class="fa-notif-body">
+    <div class="fa-notif-head">
+      <span class="fa-notif-title">{{ .Title }}</span>
+      <span class="fa-notif-time">{{ .Time }}</span>
+    </div>
+    <p class="fa-notif-text">{{ .Body }}</p>
+    {{ with .CTA }}<a class="fa-btn fa-btn--ghost fa-btn--sm fa-notif-cta" href="{{ .Href }}">
+      {{ .Label }} <i data-lucide="{{ .Icon }}" class="fa-btn-icon"></i>
+    </a>{{ end }}
+  </div>
+  {{ if .Unread }}<span class="fa-notif-dot" aria-label="Unread"></span>{{ end }}
+</li>
+{{ end }}
+
+{{ template "_layout" . }}

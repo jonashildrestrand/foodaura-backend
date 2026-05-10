@@ -1,0 +1,37 @@
+{{/*
+  _layout.gohtml — base page shell.
+
+  Pages override `title` and `main`. The `Chrome` field on every view-model
+  controls sidebar visibility (false for landing/onboarding, true elsewhere).
+*/}}
+
+{{ define "_layout" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ block "title" . }}Foodaura{{ end }} — Foodaura</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="/static/colors_and_type.css">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="icon" href="/static/logo-mark.svg">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+</head>
+<body>
+
+  {{ if .Chrome.ShowSidebar }}
+    <div class="fa-app">
+      {{ template "_sidebar" .Sidebar }}
+      <main class="fa-main">
+        {{ block "main" . }}{{ end }}
+      </main>
+      {{ with .Toast }}{{ template "_toast" . }}{{ end }}
+    </div>
+  {{ else }}
+    {{ block "main" . }}{{ end }}
+  {{ end }}
+
+  <script>document.addEventListener('DOMContentLoaded', () => window.lucide && lucide.createIcons());</script>
+</body>
+</html>
+{{ end }}

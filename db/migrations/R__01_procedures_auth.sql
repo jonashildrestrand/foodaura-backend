@@ -14,6 +14,16 @@ SQL SECURITY DEFINER
 BEGIN
   DECLARE v_user_id CHAR(36) DEFAULT UUID();
 
+  IF p_email IS NULL OR TRIM(p_email) = '' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'email is required';
+  END IF;
+  IF p_email NOT LIKE '%@%.%' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'email format is invalid';
+  END IF;
+  IF p_password_hash IS NULL OR TRIM(p_password_hash) = '' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'password_hash is required';
+  END IF;
+
   INSERT INTO users (id, email, password_hash)
   VALUES (v_user_id, p_email, p_password_hash);
 

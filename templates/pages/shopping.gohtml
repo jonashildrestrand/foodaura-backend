@@ -1,0 +1,24 @@
+{{ define "title" }}Shopping list{{ end }}
+
+{{ define "main" }}
+{{ template "_topbar" .Topbar }}
+
+<div class="fa-shop">
+  {{ range .Categories }}
+  <section>
+    <div class="fa-shop-head"><h3>{{ .Name }}</h3></div>
+    {{ range .Items }}
+    <div class="fa-shop-row {{ if .Bought }}is-done{{ end }}">
+      <form method="post" action="/shoppinglist/{{ .ID }}/toggle" style="display:contents">
+        <button class="fa-cb {{ if .Bought }}is-on{{ end }}" type="submit" aria-label="Toggle bought"></button>
+      </form>
+      <span class="fa-shop-q">{{ .Quantity }} {{ .Unit }}</span>
+      <span class="fa-shop-name">{{ .Name }}</span>
+    </div>
+    {{ end }}
+  </section>
+  {{ end }}
+</div>
+{{ end }}
+
+{{ template "_layout" . }}

@@ -5,7 +5,7 @@ SET @member_id   = (SELECT id FROM users WHERE email = 'member@test.com');
 SET @household_id = (SELECT id FROM households WHERE name = 'Test Household' LIMIT 1);
 SET @recipe_a_id  = (SELECT id FROM recipes WHERE title = 'Test Chicken Bowl' LIMIT 1);
 
-SELECT tap.plan(8);
+SELECT tap.plan(9);
 
 -- Helper: delete a plan and all its children
 -- We prefix plans with a comment to know which date to clean up per test.
@@ -107,5 +107,19 @@ SELECT week_start_date INTO @first_week
 FROM meal_plans WHERE household_id = @household_id ORDER BY week_start_date DESC LIMIT 1;
 SELECT tap.eq(@first_week, '2026-08-11', 'sp_mealplan_get_history: most recent week returned first');
 DELETE FROM meal_plans WHERE household_id = @household_id AND week_start_date IN ('2026-08-04', '2026-08-11');
+
+-- ─── sp_mealplan_notify_ready — meal_plan_ready notification created ──────────
+
+CALL sp_mealplan_get_or_create(@household_id, '2026-08-18', @owner_id);
+SET @plan_id = (SELECT id FROM meal_plans WHERE household_id = @household_id AND week_start_date = '2026-08-18' LIMIT 1);
+CALL sp_mealplan_notify_ready(@plan_id, @owner_id);
+SELECT tap.ok(
+  (SELECT COUNT(*) FROM notifications
+   WHERE user_id = @owner_id AND type = 'meal_plan_ready'
+     AND reference_id = @plan_id) = 1,
+  'sp_mealplan_notify_ready: meal_plan_ready notification created for requesting user'
+);
+DELETE FROM meal_plans WHERE id = @plan_id;
+CALL sp_notification_mark_all_read(@owner_id);
 
 CALL tap.finish();

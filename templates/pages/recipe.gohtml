@@ -1,0 +1,43 @@
+{{ define "title" }}{{ .Name }}{{ end }}
+
+{{ define "main" }}
+{{ template "_topbar" .Topbar }}
+
+<article class="fa-recipe-detail">
+  <div class="fa-thumb fa-thumb--{{ .Tone }} fa-recipe-hero"></div>
+  <div class="fa-recipe-meta-row">
+    <span>{{ .Minutes }} min</span><span>·</span><span>Serves {{ .Servings }}</span>
+    {{ range .Tags }}{{ template "_tag" . }}{{ end }}
+  </div>
+
+  {{ template "_nutrition_bar" .Nutrition }}
+
+  <div class="fa-recipe-cols">
+    <section>
+      <h3>Ingredients</h3>
+      <div class="fa-ing-list">
+        {{ range .Ingredients }}
+        <div class="fa-ing-row">
+          <span class="fa-ing-q">{{ .Quantity }} {{ .Unit }}</span>
+          <span>{{ .Name }}</span>
+        </div>
+        {{ end }}
+      </div>
+    </section>
+
+    <section>
+      <h3>Method</h3>
+      <ol class="fa-steps">
+        {{ range $i, $step := .Steps }}
+        <li>
+          <span class="fa-step-n">{{ inc $i }}</span>
+          <span>{{ $step }}</span>
+        </li>
+        {{ end }}
+      </ol>
+    </section>
+  </div>
+</article>
+{{ end }}
+
+{{ template "_layout" . }}

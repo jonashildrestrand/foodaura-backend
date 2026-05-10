@@ -1,0 +1,34 @@
+{{ define "title" }}Welcome to Foodaura{{ end }}
+
+{{ define "main" }}
+<div class="fa-onb">
+  <header class="fa-onb-head">
+    <span class="fa-logo-mark"><span class="fa-logo-core"></span></span>
+    <ol class="fa-onb-steps">
+      {{ $cur := .Step }}
+      {{ range $i, $name := .StepNames }}
+      <li class="fa-onb-step {{ if eq $i $cur }}is-on{{ end }} {{ if lt $i $cur }}is-done{{ end }}">
+        <span class="fa-onb-step-n">{{ if lt $i $cur }}<i data-lucide="check"></i>{{ else }}{{ inc $i }}{{ end }}</span>
+        <span class="fa-onb-step-l">{{ $name }}</span>
+      </li>
+      {{ end }}
+    </ol>
+    <span class="fa-onb-skip">Step {{ inc .Step }} of {{ len .StepNames }}</span>
+  </header>
+
+  {{/* Each step is its own form posting to /onboarding/<step>. The server
+       validates, persists via sp_upsert_profile / sp_create_household, and
+       303s to the next step. No client routing. */}}
+  <form method="post" action="/onboarding/{{ .Step }}">
+    {{ if eq .Step 0 }}{{ template "_onb_welcome"   . }}
+    {{ else if eq .Step 1 }}{{ template "_onb_household" . }}
+    {{ else if eq .Step 2 }}{{ template "_onb_members"   . }}
+    {{ else if eq .Step 3 }}{{ template "_onb_diet"      . }}
+    {{ else }}{{ template "_onb_review" . }}{{ end }}
+  </form>
+</div>
+{{ end }}
+
+{{/* Step partials live in onboarding/_steps.gohtml */}}
+
+{{ template "_layout" . }}

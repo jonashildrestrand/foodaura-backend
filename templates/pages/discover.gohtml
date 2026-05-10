@@ -1,0 +1,24 @@
+{{ define "title" }}Discover{{ end }}
+
+{{ define "main" }}
+{{ template "_topbar" .Topbar }}
+
+<form method="get" action="/discover">
+  <div class="fa-search" style="margin-bottom:16px">
+    <i data-lucide="search"></i>
+    <input type="text" name="q" value="{{ .Search }}" placeholder="Search recipes or ingredients…">
+  </div>
+  <div class="fa-filters">
+    {{ range .Filters }}
+    <button class="fa-filter {{ if .Active }}is-active{{ end }}"
+      name="filter" value="{{ .Value }}">{{ .Label }}</button>
+    {{ end }}
+  </div>
+</form>
+
+<div class="fa-discover-grid">
+  {{ range .Recipes }}{{ template "_recipe_card" . }}{{ end }}
+</div>
+{{ end }}
+
+{{ template "_layout" . }}

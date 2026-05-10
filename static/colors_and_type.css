@@ -1,0 +1,163 @@
+/* Foodaura — Colors & Type
+ * The single source of truth for color and typography tokens.
+ * Import this file at the top of any page or component.
+ *
+ * Fonts are loaded from Google Fonts. If you self-host, drop ttf/woff2
+ * files into ./fonts/ and replace the @import below with @font-face blocks.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ─────────────────────────────────────────────────────────────
+     COLOR — base palette
+     Warm, grounded, kitchen-not-clinic.
+     ───────────────────────────────────────────────────────────── */
+
+  /* Backgrounds & surfaces */
+  --bg:           #FAF5EE;   /* linen — page background */
+  --surface:      #FFFBF3;   /* card surface, slightly creamier */
+  --surface-2:    #F6E5D6;   /* peach tint — section starters, warm panels */
+  --surface-3:    #EFE3D0;   /* deeper peach — pressed/active surface */
+  --surface-sage: #E4ECDF;   /* affirming tint */
+  --surface-oat:  #F1E8D7;   /* nutrition swatch backdrop */
+
+  /* Ink / foreground */
+  --ink:          #2A1F14;   /* near-black, warm */
+  --fg-1:         #2A1F14;   /* primary text */
+  --fg-2:         #5A4A3A;   /* secondary text, body */
+  --fg-3:         #8C7A65;   /* tertiary, captions, helper */
+  --fg-4:         #B5A48E;   /* placeholder, disabled */
+
+  /* Lines */
+  --border:       #E8DECF;   /* default 1px border */
+  --border-strong:#D9CBB3;   /* hover/active border */
+
+  /* Brand */
+  --primary:        #C9603F; /* terracotta */
+  --primary-hover:  #B85432; /* slightly deeper, used by filter-brightness too */
+  --primary-soft:   #F4DDD2; /* primary tint background */
+  --primary-ink:    #FFFBF3; /* text on primary */
+
+  --accent:         #5C7A5A; /* deep sage — affirming */
+  --accent-soft:    #DDE6D7;
+
+  /* Nutrition swatches — muted, never dominant */
+  --nut-protein:  #B97A56;   /* clay */
+  --nut-carbs:    #C9A35C;   /* oat */
+  --nut-fat:      #8A8C5C;   /* olive */
+  --nut-kcal:     #C9925C;   /* butter */
+
+  /* Status — calm, never alarming */
+  --success:      #5C7A5A;
+  --warning:      #C7944A;
+  --danger:       #B05744;   /* darker than primary so they don't collide */
+  --info:         #6A7C8A;
+
+  /* ─────────────────────────────────────────────────────────────
+     SHADOWS
+     ───────────────────────────────────────────────────────────── */
+  --shadow-1: 0 1px 2px rgba(60, 38, 22, 0.04);
+  --shadow-2: 0 4px 12px rgba(60, 38, 22, 0.06);
+  --shadow-3: 0 12px 28px rgba(60, 38, 22, 0.08);
+  --focus-ring: 0 0 0 3px rgba(201, 96, 63, 0.25);
+
+  /* ─────────────────────────────────────────────────────────────
+     RADIUS
+     ───────────────────────────────────────────────────────────── */
+  --r-input:   12px;
+  --r-button:  12px;
+  --r-card:    20px;
+  --r-modal:   24px;
+  --r-image:   14px;
+  --r-pill:    999px;
+
+  /* ─────────────────────────────────────────────────────────────
+     SPACING (4px base)
+     ───────────────────────────────────────────────────────────── */
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  20px;
+  --s-6:  24px;
+  --s-7:  32px;
+  --s-8:  40px;
+  --s-9:  48px;
+  --s-10: 64px;
+  --s-11: 96px;
+
+  /* ─────────────────────────────────────────────────────────────
+     MOTION
+     ───────────────────────────────────────────────────────────── */
+  --ease-soft:    cubic-bezier(.2,.6,.2,1);
+  --ease-in-soft: cubic-bezier(.4,0,.6,1);
+  --dur-fast:     120ms;
+  --dur-base:     180ms;
+  --dur-layout:   220ms;
+
+  /* ─────────────────────────────────────────────────────────────
+     TYPE — families
+     ───────────────────────────────────────────────────────────── */
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-body:    'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* TYPE — scale (semantic) */
+  --t-display-size:   60px;  --t-display-line:   64px; --t-display-weight: 500; --t-display-track: -0.02em;
+  --t-h1-size:        44px;  --t-h1-line:        52px; --t-h1-weight:      500; --t-h1-track:      -0.015em;
+  --t-h2-size:        32px;  --t-h2-line:        40px; --t-h2-weight:      500; --t-h2-track:      -0.01em;
+  --t-h3-size:        24px;  --t-h3-line:        32px; --t-h3-weight:      600; --t-h3-track:      -0.005em;
+  --t-h4-size:        18px;  --t-h4-line:        24px; --t-h4-weight:      600; --t-h4-track:      0;
+
+  --t-body-lg-size:   18px;  --t-body-lg-line:   28px;
+  --t-body-size:      16px;  --t-body-line:      24px;
+  --t-body-sm-size:   14px;  --t-body-sm-line:   20px;
+  --t-caption-size:   13px;  --t-caption-line:   18px;
+  --t-eyebrow-size:   11px;  --t-eyebrow-line:   16px; --t-eyebrow-track: 0.12em;
+
+  --t-button-size:    15px;  --t-button-line:    20px; --t-button-weight: 600;
+  --t-label-size:     13px;  --t-label-line:     16px; --t-label-weight:  500;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ELEMENT DEFAULTS
+   Apply these globally so any HTML page picks up the system.
+   ───────────────────────────────────────────────────────────── */
+
+html, body {
+  background: var(--bg);
+  color: var(--fg-1);
+  font-family: var(--font-body);
+  font-size: var(--t-body-size);
+  line-height: var(--t-body-line);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; color: var(--fg-1); }
+h1 { font-size: var(--t-h1-size); line-height: var(--t-h1-line); font-weight: var(--t-h1-weight); letter-spacing: var(--t-h1-track); }
+h2 { font-size: var(--t-h2-size); line-height: var(--t-h2-line); font-weight: var(--t-h2-weight); letter-spacing: var(--t-h2-track); }
+h3 { font-size: var(--t-h3-size); line-height: var(--t-h3-line); font-weight: var(--t-h3-weight); letter-spacing: var(--t-h3-track); }
+h4 { font-family: var(--font-body); font-size: var(--t-h4-size); line-height: var(--t-h4-line); font-weight: var(--t-h4-weight); }
+
+p { margin: 0 0 var(--s-4); color: var(--fg-2); }
+small, .caption { font-size: var(--t-caption-size); line-height: var(--t-caption-line); color: var(--fg-3); }
+.eyebrow { font-size: var(--t-eyebrow-size); line-height: var(--t-eyebrow-line); letter-spacing: var(--t-eyebrow-track); text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
+
+code, pre { font-family: var(--font-mono); font-size: 13px; }
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+::selection { background: var(--primary-soft); color: var(--ink); }
+
+/* Card primitive */
+.fa-card {
+  background: var(--surface);
+  border-radius: var(--r-card);
+  padding: var(--s-6);
+  box-shadow: var(--shadow-1);
+  transition: box-shadow var(--dur-base) var(--ease-soft), transform var(--dur-base) var(--ease-soft);
+}
+.fa-card:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }

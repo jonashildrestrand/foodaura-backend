@@ -1,0 +1,18 @@
+{{ define "title" }}Eat with purpose{{ end }}
+
+{{ define "main" }}
+{{/*
+  Landing is a static page — no view-model fields beyond BaseVM.
+  Rendered by GetLanding which sets Chrome.ShowSidebar = false.
+  Full markup to be added during BE: landing page implementation.
+*/}}
+<div class="fa-onb" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:24px">
+  <span class="fa-logo-mark" style="width:56px;height:56px"></span>
+  <h1 style="font-family:var(--font-display);font-size:48px;font-weight:500;letter-spacing:-0.02em">foodaura</h1>
+  <p style="color:var(--fg-2)">Eat with purpose.</p>
+  <a class="fa-btn fa-btn--primary" href="/onboarding/0">Get started</a>
+  <a class="fa-btn fa-btn--ghost" href="/login">Sign in</a>
+</div>
+{{ end }}
+
+{{ template "_layout" . }}

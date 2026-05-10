@@ -1,0 +1,32 @@
+{{/*
+  _topbar.gohtml — the .fa-page-head block at the top of every interior page.
+  Expects a TopbarVM: { Eyebrow, Title, Sub, Actions []ActionVM }.
+  ActionVM: { Label, Icon, Variant ("primary"|"secondary"|"ghost"), Href, FormAction, FormMethod }
+*/}}
+
+{{ define "_topbar" }}
+<div class="fa-page-head">
+  <div>
+    {{ with .Eyebrow }}<div class="fa-eyebrow">{{ . }}</div>{{ end }}
+    <h1>{{ .Title }}</h1>
+    {{ with .Sub }}<p class="fa-page-sub">{{ . }}</p>{{ end }}
+  </div>
+  {{ if .Actions }}
+  <div class="fa-page-actions">
+    {{ range .Actions }}
+      {{ if .FormAction }}
+        <form method="{{ .FormMethod }}" action="{{ .FormAction }}">
+          <button class="fa-btn fa-btn--{{ .Variant }}" type="submit">
+            {{ with .Icon }}<i data-lucide="{{ . }}" class="fa-btn-icon"></i>{{ end }}{{ .Label }}
+          </button>
+        </form>
+      {{ else }}
+        <a class="fa-btn fa-btn--{{ .Variant }}" href="{{ .Href }}">
+          {{ with .Icon }}<i data-lucide="{{ . }}" class="fa-btn-icon"></i>{{ end }}{{ .Label }}
+        </a>
+      {{ end }}
+    {{ end }}
+  </div>
+  {{ end }}
+</div>
+{{ end }}

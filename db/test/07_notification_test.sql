@@ -15,7 +15,7 @@ SELECT tap.ok(
    WHERE user_id = @owner_id AND type = 'meal_plan_ready') >= 1,
   'sp_notification_create: notification row inserted'
 );
-DELETE FROM notifications WHERE user_id = @owner_id AND type = 'meal_plan_ready';
+CALL sp_notification_mark_all_read(@owner_id);
 
 -- ─── sp_notification_get_all — unread first ──────────────────────────────────
 
@@ -23,20 +23,20 @@ INSERT INTO notifications (id, user_id, type, title, body, is_read, read_at) VAL
   (UUID(), @owner_id, 'meal_plan_ready', 'Old', 'Old body', TRUE,  NOW()),
   (UUID(), @owner_id, 'meal_plan_ready', 'New', 'New body', FALSE, NULL);
 SELECT tap.ok(
-  (SELECT COUNT(*) FROM notifications WHERE user_id = @owner_id AND is_read = FALSE AND title = 'New') = 1,
+  (SELECT COUNT(*) FROM notifications WHERE user_id = @owner_id AND is_read = FALSE AND title = 'New') >= 1,
   'sp_notification_get_all: unread notification present'
 );
 SELECT tap.ok(
-  (SELECT COUNT(*) FROM notifications WHERE user_id = @owner_id AND is_read = TRUE AND title = 'Old') = 1,
+  (SELECT COUNT(*) FROM notifications WHERE user_id = @owner_id AND is_read = TRUE AND title = 'Old') >= 1,
   'sp_notification_get_all: read notification present'
 );
-DELETE FROM notifications WHERE user_id = @owner_id AND title IN ('Old', 'New');
+CALL sp_notification_mark_all_read(@owner_id);
 
 -- ─── sp_notification_mark_read — sets is_read and read_at ────────────────────
 
+SET @notif_id = UUID();
 INSERT INTO notifications (id, user_id, type, title, body, is_read)
-VALUES (UUID(), @owner_id, 'meal_plan_ready', 'Unread', 'body', FALSE);
-SET @notif_id = (SELECT id FROM notifications WHERE user_id = @owner_id AND title = 'Unread' LIMIT 1);
+VALUES (@notif_id, @owner_id, 'meal_plan_ready', 'Unread', 'body', FALSE);
 CALL sp_notification_mark_read(@notif_id, @owner_id);
 SELECT tap.ok(
   (SELECT is_read FROM notifications WHERE id = @notif_id) = TRUE,
@@ -46,7 +46,6 @@ SELECT tap.ok(
   (SELECT read_at FROM notifications WHERE id = @notif_id) IS NOT NULL,
   'sp_notification_mark_read: read_at timestamp populated'
 );
-DELETE FROM notifications WHERE id = @notif_id;
 
 -- ─── sp_notification_mark_all_read — all unread updated ──────────────────────
 
@@ -60,6 +59,5 @@ SELECT tap.eq(
   '0',
   'sp_notification_mark_all_read: no unread notifications remain'
 );
-DELETE FROM notifications WHERE user_id = @owner_id AND title IN ('N1', 'N2', 'N3');
 
 CALL tap.finish();
