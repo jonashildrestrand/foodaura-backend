@@ -14,16 +14,16 @@ BEGIN
   DECLARE v_household_id   CHAR(36);
   DECLARE v_pending_invite INT DEFAULT 0;
 
-  -- Users
+  -- Users (sp_auth_create_user now requires display_name as second parameter)
   SELECT id INTO v_jonas_id FROM users WHERE email = 'jonas@hildrestrand.no' LIMIT 1;
   IF v_jonas_id IS NULL THEN
-    CALL sp_auth_create_user('jonas@hildrestrand.no', '$2a$12$seed.hash.placeholder.jonas');
+    CALL sp_auth_create_user('jonas@hildrestrand.no', 'Jonas Hildrestrand', '$2a$12$seed.hash.placeholder.jonas');
     SELECT id INTO v_jonas_id FROM users WHERE email = 'jonas@hildrestrand.no' LIMIT 1;
   END IF;
 
   SELECT id INTO v_thuy_id FROM users WHERE email = 'thuy@hildrestrand.no' LIMIT 1;
   IF v_thuy_id IS NULL THEN
-    CALL sp_auth_create_user('thuy@hildrestrand.no', '$2a$12$seed.hash.placeholder.thuy');
+    CALL sp_auth_create_user('thuy@hildrestrand.no', 'Thuy Hildrestrand', '$2a$12$seed.hash.placeholder.thuy');
     SELECT id INTO v_thuy_id FROM users WHERE email = 'thuy@hildrestrand.no' LIMIT 1;
   END IF;
 

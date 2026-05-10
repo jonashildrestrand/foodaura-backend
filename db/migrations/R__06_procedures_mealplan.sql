@@ -97,16 +97,18 @@ BEGIN
   FROM meal_plans
   WHERE id = p_meal_plan_id;
 
-  -- Slots with recipe summary
+  -- Slots with recipe summary (includes nutrition for day-total computation)
   SELECT ms.id, ms.day_of_week, ms.meal_type, ms.recipe_id,
-         r.title AS recipe_title, r.calories AS recipe_calories
+         r.title AS recipe_title, r.calories AS recipe_calories,
+         r.protein_g AS recipe_protein_g, r.carbs_g AS recipe_carbs_g,
+         r.fat_g AS recipe_fat_g, r.cook_time_minutes AS recipe_cook_time_minutes
   FROM meal_slots ms
   LEFT JOIN recipes r ON r.id = ms.recipe_id
   WHERE ms.meal_plan_id = p_meal_plan_id
   ORDER BY ms.day_of_week, ms.meal_type;
 
   -- Participants per slot
-  SELECT msp.meal_slot_id, msp.user_id, u.email
+  SELECT msp.meal_slot_id, msp.user_id, u.display_name, u.email
   FROM meal_slot_participants msp
   JOIN meal_slots ms ON ms.id = msp.meal_slot_id
   JOIN users u ON u.id = msp.user_id
@@ -272,7 +274,7 @@ END$$
 
 -- ─── sp_mealplan_notify_ready ────────────────────────────────────────────────
 -- Create a meal_plan_ready notification for the user who requested AI generation.
--- Called by the backend after the AI service returns and the plan has been saved.
+-- Called by sp_mealplan_bulk_assign after the plan has been saved.
 
 CREATE OR REPLACE PROCEDURE sp_mealplan_notify_ready(
   IN p_meal_plan_id CHAR(36),
@@ -297,6 +299,105 @@ BEGIN
     'meal_plan',
     p_meal_plan_id
   );
+END$$
+
+-- ─── sp_mealplan_bulk_assign ─────────────────────────────────────────────────
+-- Bulk-assign AI-generated recipes to slots in a meal plan in a single call.
+-- Derives the shopping list once after all assignments, then notifies the user.
+--
+-- p_assignments: JSON array of objects:
+--   [{"slot_id": "...", "recipe_id": "...", "participant_user_ids": ["...", "..."]}]
+-- p_requesting_user_id: receives the meal_plan_ready notification.
+
+CREATE OR REPLACE PROCEDURE sp_mealplan_bulk_assign(
+  IN p_meal_plan_id         CHAR(36),
+  IN p_assignments          JSON,
+  IN p_requesting_user_id   CHAR(36)
+)
+SQL SECURITY DEFINER
+BEGIN
+  DECLARE v_idx          INT DEFAULT 0;
+  DECLARE v_count        INT;
+  DECLARE v_slot_id      CHAR(36);
+  DECLARE v_recipe_id    CHAR(36);
+  DECLARE v_participants JSON;
+
+  -- Scope check
+  IF NOT EXISTS (
+    SELECT 1 FROM meal_plans mp
+    JOIN household_members hm ON hm.household_id = mp.household_id
+    WHERE mp.id = p_meal_plan_id AND hm.user_id = p_requesting_user_id
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Access denied: user is not a member of this household';
+  END IF;
+
+  SET v_count = JSON_LENGTH(p_assignments);
+
+  WHILE v_idx < v_count DO
+    SET v_slot_id   = JSON_UNQUOTE(JSON_EXTRACT(p_assignments, CONCAT('$[', v_idx, '].slot_id')));
+    SET v_recipe_id = JSON_UNQUOTE(JSON_EXTRACT(p_assignments, CONCAT('$[', v_idx, '].recipe_id')));
+    SET v_participants = JSON_EXTRACT(p_assignments, CONCAT('$[', v_idx, '].participant_user_ids'));
+
+    UPDATE meal_slots SET recipe_id = v_recipe_id WHERE id = v_slot_id;
+
+    DELETE FROM meal_slot_participants WHERE meal_slot_id = v_slot_id;
+
+    INSERT INTO meal_slot_participants (meal_slot_id, user_id)
+    SELECT v_slot_id, jt.user_id
+    FROM JSON_TABLE(v_participants, '$[*]' COLUMNS(user_id CHAR(36) PATH '$')) jt;
+
+    SET v_idx = v_idx + 1;
+  END WHILE;
+
+  -- Derive shopping list once after all assignments
+  CALL sp_shoppinglist_derive(p_meal_plan_id);
+
+  -- Notify the requesting user that the plan is ready
+  CALL sp_mealplan_notify_ready(p_meal_plan_id, p_requesting_user_id);
+END$$
+
+-- ─── sp_mealplan_get_nutrition_summary ───────────────────────────────────────
+-- Return per-slot and per-day nutritional totals for a meal plan.
+-- Returns two result sets:
+--   1. Per-slot: day_of_week, meal_type, calories, protein_g, carbs_g, fat_g
+--   2. Per-day totals: day_of_week, calories, protein_g, carbs_g, fat_g
+
+CREATE OR REPLACE PROCEDURE sp_mealplan_get_nutrition_summary(
+  IN p_meal_plan_id       CHAR(36),
+  IN p_requesting_user_id CHAR(36)
+)
+SQL SECURITY DEFINER
+BEGIN
+  -- Scope check
+  IF NOT EXISTS (
+    SELECT 1 FROM meal_plans mp
+    JOIN household_members hm ON hm.household_id = mp.household_id
+    WHERE mp.id = p_meal_plan_id AND hm.user_id = p_requesting_user_id
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Access denied: user is not a member of this household';
+  END IF;
+
+  -- Per-slot nutrition
+  SELECT ms.id AS meal_slot_id, ms.day_of_week, ms.meal_type,
+         r.calories, r.protein_g, r.carbs_g, r.fat_g
+  FROM meal_slots ms
+  JOIN recipes r ON r.id = ms.recipe_id
+  WHERE ms.meal_plan_id = p_meal_plan_id
+    AND ms.recipe_id IS NOT NULL
+  ORDER BY ms.day_of_week, ms.meal_type;
+
+  -- Per-day totals
+  SELECT ms.day_of_week,
+         SUM(r.calories)  AS calories,
+         SUM(r.protein_g) AS protein_g,
+         SUM(r.carbs_g)   AS carbs_g,
+         SUM(r.fat_g)     AS fat_g
+  FROM meal_slots ms
+  JOIN recipes r ON r.id = ms.recipe_id
+  WHERE ms.meal_plan_id = p_meal_plan_id
+    AND ms.recipe_id IS NOT NULL
+  GROUP BY ms.day_of_week
+  ORDER BY ms.day_of_week;
 END$$
 
 DELIMITER ;

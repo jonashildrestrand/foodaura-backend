@@ -32,6 +32,12 @@ END$$
 
 -- ─── sp_household_get ────────────────────────────────────────────────────────
 -- Fetch household details and member list. Only succeeds if requesting user is a member.
+-- Returns two result sets:
+--   1. Household header row
+--   2. Member rows with display_name, initials, avatar_tint (derived from join order)
+--
+-- avatar_tint rule (0-indexed join order):
+--   even position (owner first) → 'p', odd position → 's'
 
 CREATE OR REPLACE PROCEDURE sp_household_get(
   IN p_household_id       CHAR(36),
@@ -50,10 +56,31 @@ BEGIN
   FROM households h
   WHERE h.id = p_household_id;
 
-  SELECT hm.user_id, u.email, hm.joined_at
+  SELECT
+    hm.user_id,
+    u.email,
+    u.display_name,
+    -- Initials: first letter of each word (up to 2 chars)
+    CASE
+      WHEN LOCATE(' ', TRIM(u.display_name)) > 0 THEN
+        CONCAT(
+          UPPER(SUBSTRING(TRIM(u.display_name), 1, 1)),
+          UPPER(SUBSTRING(TRIM(u.display_name),
+                          LOCATE(' ', TRIM(u.display_name)) + 1, 1))
+        )
+      ELSE
+        UPPER(SUBSTRING(TRIM(u.display_name), 1, 2))
+    END AS initials,
+    -- avatar_tint: even join-order (0-indexed) → 'p', odd → 's'
+    IF(
+      (ROW_NUMBER() OVER (ORDER BY hm.joined_at) - 1) % 2 = 0,
+      'p', 's'
+    ) AS avatar_tint,
+    hm.joined_at
   FROM household_members hm
   JOIN users u ON u.id = hm.user_id
-  WHERE hm.household_id = p_household_id;
+  WHERE hm.household_id = p_household_id
+  ORDER BY hm.joined_at;
 END$$
 
 -- ─── sp_household_invite ─────────────────────────────────────────────────────
@@ -110,7 +137,6 @@ END$$
 -- ─── sp_household_accept_invitation ──────────────────────────────────────────
 -- Validate token, add accepting user to household, mark invitation accepted,
 -- and notify the inviter that their invitation was accepted.
--- Note: the invitee was already notified when sp_household_invite was called.
 
 CREATE OR REPLACE PROCEDURE sp_household_accept_invitation(
   IN p_token_hash        VARCHAR(255),
@@ -118,11 +144,11 @@ CREATE OR REPLACE PROCEDURE sp_household_accept_invitation(
 )
 SQL SECURITY DEFINER
 BEGIN
-  DECLARE v_invitation_id   CHAR(36);
-  DECLARE v_household_id    CHAR(36);
-  DECLARE v_inviter_id      CHAR(36);
-  DECLARE v_household_name  VARCHAR(255);
-  DECLARE v_accepting_email VARCHAR(255);
+  DECLARE v_invitation_id    CHAR(36);
+  DECLARE v_household_id     CHAR(36);
+  DECLARE v_inviter_id       CHAR(36);
+  DECLARE v_household_name   VARCHAR(255);
+  DECLARE v_accepting_name   VARCHAR(100);
 
   -- Fetch and validate the invitation
   SELECT i.id, i.household_id, i.invited_by_user_id
@@ -138,7 +164,7 @@ BEGIN
   END IF;
 
   SELECT name INTO v_household_name FROM households WHERE id = v_household_id;
-  SELECT email INTO v_accepting_email FROM users WHERE id = p_accepting_user_id;
+  SELECT display_name INTO v_accepting_name FROM users WHERE id = p_accepting_user_id;
 
   -- Add member (ignore duplicate in case of retry)
   INSERT IGNORE INTO household_members (household_id, user_id)
@@ -154,7 +180,7 @@ BEGIN
     v_inviter_id,
     'household_invitation_accepted',
     'Invitation accepted',
-    CONCAT(v_accepting_email, ' has joined ', v_household_name),
+    CONCAT(v_accepting_name, ' has joined ', v_household_name),
     'household',
     v_household_id
   );
@@ -164,7 +190,6 @@ END$$
 
 -- ─── sp_household_remove_member ──────────────────────────────────────────────
 -- Remove a member from a household. Only the household owner can call this.
--- Creates a notification for the removed user.
 
 CREATE OR REPLACE PROCEDURE sp_household_remove_member(
   IN p_household_id       CHAR(36),
@@ -175,7 +200,7 @@ SQL SECURITY DEFINER
 BEGIN
   DECLARE v_owner_id       CHAR(36);
   DECLARE v_household_name VARCHAR(255);
-  DECLARE v_target_email   VARCHAR(255);
+  DECLARE v_target_name    VARCHAR(100);
 
   SELECT owner_user_id, name INTO v_owner_id, v_household_name
   FROM households WHERE id = p_household_id;
@@ -190,7 +215,7 @@ BEGIN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'The household owner cannot be removed';
   END IF;
 
-  SELECT email INTO v_target_email FROM users WHERE id = p_target_user_id;
+  SELECT display_name INTO v_target_name FROM users WHERE id = p_target_user_id;
 
   DELETE FROM household_members
   WHERE household_id = p_household_id AND user_id = p_target_user_id;
@@ -208,7 +233,6 @@ END$$
 
 -- ─── sp_household_leave ──────────────────────────────────────────────────────
 -- Allow a non-owner member to leave a household.
--- Creates a notification for the household owner.
 
 CREATE OR REPLACE PROCEDURE sp_household_leave(
   IN p_household_id CHAR(36),
@@ -218,7 +242,7 @@ SQL SECURITY DEFINER
 BEGIN
   DECLARE v_owner_id       CHAR(36);
   DECLARE v_household_name VARCHAR(255);
-  DECLARE v_leaving_email  VARCHAR(255);
+  DECLARE v_leaving_name   VARCHAR(100);
 
   SELECT owner_user_id, name INTO v_owner_id, v_household_name
   FROM households WHERE id = p_household_id;
@@ -236,7 +260,7 @@ BEGIN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'User is not a member of this household';
   END IF;
 
-  SELECT email INTO v_leaving_email FROM users WHERE id = p_user_id;
+  SELECT display_name INTO v_leaving_name FROM users WHERE id = p_user_id;
 
   DELETE FROM household_members
   WHERE household_id = p_household_id AND user_id = p_user_id;
@@ -246,10 +270,38 @@ BEGIN
     v_owner_id,
     'household_member_left',
     'Member left household',
-    CONCAT(v_leaving_email, ' has left ', v_household_name),
+    CONCAT(v_leaving_name, ' has left ', v_household_name),
     'household',
     p_household_id
   );
+END$$
+
+-- ─── sp_household_get_member_preferences ─────────────────────────────────────
+-- Fetch all household members' recipe and ingredient preferences in one call.
+-- Used during meal planning to avoid suggesting recipes members dislike.
+-- Returns two result sets:
+--   1. Recipe preferences (like/dislike) per member
+--   2. Ingredient dislikes per member
+
+CREATE OR REPLACE PROCEDURE sp_household_get_member_preferences(
+  IN p_household_id CHAR(36)
+)
+SQL SECURITY DEFINER
+BEGIN
+  -- Recipe preferences per household member
+  SELECT rp.user_id, rp.recipe_id, r.title AS recipe_title, rp.preference
+  FROM recipe_preferences rp
+  JOIN household_members hm ON hm.user_id = rp.user_id
+  JOIN recipes r ON r.id = rp.recipe_id
+  WHERE hm.household_id = p_household_id
+  ORDER BY rp.user_id, rp.preference, r.title;
+
+  -- Ingredient dislikes per household member
+  SELECT id2.user_id, id2.ingredient_name
+  FROM ingredient_dislikes id2
+  JOIN household_members hm ON hm.user_id = id2.user_id
+  WHERE hm.household_id = p_household_id
+  ORDER BY id2.user_id, id2.ingredient_name;
 END$$
 
 DELIMITER ;

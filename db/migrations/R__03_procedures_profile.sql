@@ -14,7 +14,8 @@ CREATE OR REPLACE PROCEDURE sp_profile_upsert(
   IN p_weight_kg      DECIMAL(5,2),
   IN p_height_cm      DECIMAL(5,2),
   IN p_activity_level ENUM('sedentary', 'light', 'moderate', 'active', 'very_active'),
-  IN p_goal           ENUM('lose_weight', 'maintain', 'build_muscle', 'eat_better')
+  IN p_goal           ENUM('lose_weight', 'maintain', 'build_muscle', 'eat_better'),
+  IN p_diet_type      ENUM('omnivore', 'vegetarian', 'vegan', 'pescatarian')
 )
 SQL SECURITY DEFINER
 BEGIN
@@ -27,11 +28,14 @@ BEGIN
   IF p_height_cm < 50 OR p_height_cm > 300 THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'height_cm must be between 50 and 300';
   END IF;
+  IF p_diet_type IS NULL THEN
+    SET p_diet_type = 'omnivore';
+  END IF;
 
   INSERT INTO nutritional_profiles
-    (id, user_id, biological_sex, age, weight_kg, height_cm, activity_level, goal)
+    (id, user_id, biological_sex, age, weight_kg, height_cm, activity_level, goal, diet_type)
   VALUES
-    (UUID(), p_user_id, p_biological_sex, p_age, p_weight_kg, p_height_cm, p_activity_level, p_goal)
+    (UUID(), p_user_id, p_biological_sex, p_age, p_weight_kg, p_height_cm, p_activity_level, p_goal, p_diet_type)
   ON DUPLICATE KEY UPDATE
     biological_sex = p_biological_sex,
     age            = p_age,
@@ -39,6 +43,7 @@ BEGIN
     height_cm      = p_height_cm,
     activity_level = p_activity_level,
     goal           = p_goal,
+    diet_type      = p_diet_type,
     updated_at     = CURRENT_TIMESTAMP;
 END$$
 
@@ -50,7 +55,8 @@ CREATE OR REPLACE PROCEDURE sp_profile_get(
 )
 SQL SECURITY DEFINER
 BEGIN
-  SELECT id, user_id, biological_sex, age, weight_kg, height_cm, activity_level, goal, updated_at
+  SELECT id, user_id, biological_sex, age, weight_kg, height_cm,
+         activity_level, goal, diet_type, updated_at
   FROM nutritional_profiles
   WHERE user_id = p_user_id;
 END$$

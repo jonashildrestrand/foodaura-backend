@@ -5,8 +5,10 @@ DELIMITER $$
 
 -- ─── sp_shoppinglist_derive ──────────────────────────────────────────────────
 -- Generate or regenerate the shopping list for a meal plan.
--- Groups recipe_ingredients by (ingredient_name, unit) across all assigned slots,
--- summing quantities. Preserves is_checked state for items that still appear.
+-- Uses participant-scaled quantities via the same formula as sp_recipe_scale:
+--   scale_factor = SUM(participant_calories) / (3.0 * recipe_calories)
+-- Groups scaled quantities by (ingredient_name, unit). Preserves is_checked
+-- state for items that still appear after regeneration.
 
 CREATE OR REPLACE PROCEDURE sp_shoppinglist_derive(
   IN p_meal_plan_id CHAR(36)
@@ -30,17 +32,32 @@ BEGIN
   -- Delete current shopping list
   DELETE FROM shopping_list_items WHERE meal_plan_id = p_meal_plan_id;
 
-  -- Rebuild from all assigned slots, grouped by (ingredient_name, unit)
+  -- Rebuild with participant-scaled quantities
+  -- scale_factor per slot = SUM(participant_calories) / (3.0 * recipe_calories)
+  -- Falls back to 1.0 when recipe_calories = 0 or slot has no participants.
   INSERT INTO shopping_list_items (id, meal_plan_id, ingredient_name, total_quantity, unit, category, is_checked)
   SELECT
     UUID(),
     p_meal_plan_id,
     ri.name,
-    SUM(ri.quantity),
+    ROUND(SUM(
+      ri.quantity * CASE
+        WHEN r.calories > 0 THEN
+          COALESCE(
+            (SELECT SUM(COALESCE(nt.calories, 2000)) / (3.0 * r.calories)
+             FROM meal_slot_participants msp
+             LEFT JOIN nutritional_targets nt ON nt.user_id = msp.user_id
+             WHERE msp.meal_slot_id = ms.id),
+            1.0
+          )
+        ELSE 1.0
+      END
+    ), 3) AS total_quantity,
     ri.unit,
     ri.category,
     IF(tc.ingredient_name IS NOT NULL, TRUE, FALSE) AS is_checked
   FROM meal_slots ms
+  JOIN recipes r ON r.id = ms.recipe_id
   JOIN recipe_ingredients ri ON ri.recipe_id = ms.recipe_id
   LEFT JOIN _tmp_checked_items tc ON tc.ingredient_name = ri.name AND tc.unit = ri.unit
   WHERE ms.meal_plan_id = p_meal_plan_id

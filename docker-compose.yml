@@ -30,6 +30,20 @@ services:
       FLYWAY_PLACEHOLDERS_FOODAURA_BACKEND_DB_PASSWORD: ${FOODAURA_BACKEND_DB_PASSWORD}
       FLYWAY_PLACEHOLDERS_FOODAURA_AI_DB_PASSWORD: ${FOODAURA_AI_DB_PASSWORD}
 
+  seeder:
+    image: mariadb:11
+    profiles: [test]
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+    volumes:
+      - ./db/seed:/seed
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+    command: >
+      mariadb -h mariadb -u root -p${MARIADB_ROOT_PASSWORD} foodaura
+      -e "source /seed/test_seed.sql"
+
   # backend:
   #   depends_on:
   #     flyway:

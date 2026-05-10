@@ -5,9 +5,11 @@ DELIMITER $$
 
 -- ─── sp_auth_create_user ──────────────────────────────────────────────────────
 -- Create a new user account. Returns the generated user_id.
+-- display_name is validated: not null, not empty, max 100 chars.
 
 CREATE OR REPLACE PROCEDURE sp_auth_create_user(
   IN p_email         VARCHAR(255),
+  IN p_display_name  VARCHAR(100),
   IN p_password_hash VARCHAR(255)
 )
 SQL SECURITY DEFINER
@@ -20,25 +22,32 @@ BEGIN
   IF p_email NOT LIKE '%@%.%' THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'email format is invalid';
   END IF;
+  IF p_display_name IS NULL OR TRIM(p_display_name) = '' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'display_name is required';
+  END IF;
+  IF CHAR_LENGTH(p_display_name) > 100 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'display_name must be 100 characters or fewer';
+  END IF;
   IF p_password_hash IS NULL OR TRIM(p_password_hash) = '' THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'password_hash is required';
   END IF;
 
-  INSERT INTO users (id, email, password_hash)
-  VALUES (v_user_id, p_email, p_password_hash);
+  INSERT INTO users (id, email, display_name, password_hash)
+  VALUES (v_user_id, p_email, TRIM(p_display_name), p_password_hash);
 
   SELECT v_user_id AS user_id;
 END$$
 
 -- ─── sp_auth_get_user_by_email ────────────────────────────────────────────────
 -- Fetch user record by email for login verification.
+-- Returns display_name for sidebar population.
 
 CREATE OR REPLACE PROCEDURE sp_auth_get_user_by_email(
   IN p_email VARCHAR(255)
 )
 SQL SECURITY DEFINER
 BEGIN
-  SELECT id, email, password_hash
+  SELECT id, email, display_name, password_hash
   FROM users
   WHERE email = p_email;
 END$$

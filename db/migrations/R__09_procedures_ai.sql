@@ -5,7 +5,8 @@ DELIMITER $$
 
 -- ─── sp_ai_get_household_profiles ────────────────────────────────────────────
 -- Return nutritional profiles and targets for all members of a household.
--- Excludes email, password_hash, session data, and all other PII.
+-- Excludes email, password_hash, display_name, session data, and all other PII.
+-- Includes diet_type so AI generation can respect dietary preferences.
 -- The only procedure through which the AI service accesses user data.
 
 CREATE OR REPLACE PROCEDURE sp_ai_get_household_profiles(
@@ -21,6 +22,7 @@ BEGIN
     np.height_cm,
     np.activity_level,
     np.goal,
+    np.diet_type,
     nt.calories,
     nt.protein_g,
     nt.carbs_g,
