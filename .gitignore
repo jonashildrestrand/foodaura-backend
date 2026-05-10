@@ -1,2 +1,14 @@
 .env
 *.local
+**/.obsidian/
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+go.work.sum
