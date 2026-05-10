@@ -1,0 +1,39 @@
+services:
+  mariadb:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: foodaura
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  flyway:
+    image: flyway/flyway:11-alpine
+    command: migrate
+    volumes:
+      - ./db/migrations:/flyway/sql
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      FLYWAY_URL: jdbc:mariadb://mariadb:3306/foodaura
+      FLYWAY_USER: root
+      FLYWAY_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      FLYWAY_PLACEHOLDERS_FOODAURA_BACKEND_DB_PASSWORD: ${FOODAURA_BACKEND_DB_PASSWORD}
+      FLYWAY_PLACEHOLDERS_FOODAURA_AI_DB_PASSWORD: ${FOODAURA_AI_DB_PASSWORD}
+
+  # backend:
+  #   depends_on:
+  #     flyway:
+  #       condition: service_completed_successfully
+
+volumes:
+  mariadb_data:
