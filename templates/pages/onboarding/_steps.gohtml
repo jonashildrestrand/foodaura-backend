@@ -1,15 +1,25 @@
-{{/* _onb_welcome — step 0: display name + goal */}}
+{{/* _onb_welcome — step 0: email + password + display name */}}
 {{ define "_onb_welcome" }}
 <div class="fa-onb-pane">
-  <h1>What should we call you?</h1>
-  <p>This is how you'll appear to household members.</p>
+  <h1>Create your account</h1>
+  <p>You'll use your email to sign in. Your name is how you'll appear to household members.</p>
+  <div class="fa-field fa-field--lg">
+    <label class="fa-field-label">Email</label>
+    <input class="fa-input fa-input--lg" type="email" name="email"
+      placeholder="you@example.com" required autocomplete="email">
+  </div>
+  <div class="fa-field fa-field--lg">
+    <label class="fa-field-label">Password</label>
+    <input class="fa-input fa-input--lg" type="password" name="password"
+      placeholder="Choose a strong password" required autocomplete="new-password" minlength="8">
+  </div>
   <div class="fa-field fa-field--lg">
     <label class="fa-field-label">Your name</label>
     <input class="fa-input fa-input--lg" type="text" name="display_name"
-      value="{{ .Form.Household }}" placeholder="e.g. Jonas" required>
+      placeholder="e.g. Jonas" required>
   </div>
   <div class="fa-onb-actions">
-    <button class="fa-btn fa-btn--primary" type="submit">Continue</button>
+    <button class="fa-btn fa-btn--primary" type="submit">Create account</button>
   </div>
 </div>
 {{ end }}
