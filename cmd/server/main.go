@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/foodaura/backend/internal/config"
+	"github.com/joho/godotenv"
 	"github.com/foodaura/backend/internal/controller"
 	appdb "github.com/foodaura/backend/internal/db"
 	"github.com/foodaura/backend/internal/middleware"
@@ -14,6 +15,10 @@ import (
 )
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using environment variables")
+	}
+
 	cfg := config.Load()
 
 	db, err := appdb.Open(cfg)
@@ -39,24 +44,8 @@ func main() {
 	})
 	r.Get("/login", controller.GetLogin(renderer))
 	r.Post("/login", controller.PostLogin(db, renderer))
-
-	// Onboarding step 0 is public (registration).
-	r.Get("/onboarding/0", controller.GetOnboarding0(renderer))
-	r.Post("/onboarding/0", controller.PostOnboarding0(db))
-
-	// Onboarding steps 1-4 require auth (user already has a session after step 0).
-	r.Group(func(r chi.Router) {
-		r.Use(middleware.Auth(db))
-
-		r.Get("/onboarding/1", controller.GetOnboarding1(db, renderer))
-		r.Post("/onboarding/1", controller.PostOnboarding1(db))
-		r.Get("/onboarding/2", controller.GetOnboarding2(db, renderer))
-		r.Post("/onboarding/2", controller.PostOnboarding2(db))
-		r.Get("/onboarding/3", controller.GetOnboarding3(db, renderer))
-		r.Post("/onboarding/3", controller.PostOnboarding3(db))
-		r.Get("/onboarding/4", controller.GetOnboarding4(db, renderer))
-		r.Post("/onboarding/4", controller.PostOnboarding4())
-	})
+	r.Get("/onboarding", controller.GetOnboarding(renderer))
+	r.Post("/users", controller.PostUsers(db))
 
 	// Invitation join link (requires auth — user must be registered first).
 	r.Group(func(r chi.Router) {

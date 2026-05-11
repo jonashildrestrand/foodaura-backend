@@ -1,34 +1,234 @@
 {{ define "title" }}Welcome to Foodaura{{ end }}
 
 {{ define "main" }}
-<div class="fa-onb">
+<style>[x-cloak]{display:none}</style>
+<script>
+document.addEventListener('alpine:init', () => {
+  Alpine.data('onboarding', () => ({
+    step: 0,
+    stepNames: ['Account', 'Household', 'Invite', 'Diet & Goals', 'Review'],
+    form: {
+      email: '',
+      display_name: '',
+      password: '',
+      household_name: '',
+      invite_email: '',
+      goal: 'eat_better',
+      diet_type: 'omnivore',
+      avoid: ''
+    },
+    error: '',
+    loading: false,
+    next() {
+      this.error = '';
+      if (this.step === 0 && (!this.form.email || !this.form.password || !this.form.display_name)) {
+        this.error = 'All fields are required.';
+        return;
+      }
+      if (this.step === 1 && !this.form.household_name.trim()) {
+        this.error = 'Household name is required.';
+        return;
+      }
+      this.step++;
+    },
+    prev() {
+      this.error = '';
+      this.step--;
+    },
+    async submit() {
+      this.loading = true;
+      this.error = '';
+      const body = {
+        email: this.form.email,
+        display_name: this.form.display_name,
+        password: this.form.password,
+        household_name: this.form.household_name,
+        invite_email: this.form.invite_email,
+        goal: this.form.goal,
+        diet_type: this.form.diet_type,
+        dislikes: this.form.avoid.split(',').map(s => s.trim()).filter(Boolean)
+      };
+      try {
+        const res = await fetch('/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (res.ok) {
+          window.location.href = '/plan';
+        } else {
+          this.error = (await res.text()) || 'Something went wrong.';
+          this.loading = false;
+        }
+      } catch {
+        this.error = 'Network error. Please try again.';
+        this.loading = false;
+      }
+    }
+  }));
+});
+</script>
+
+<div class="fa-onb" x-data="onboarding" x-cloak>
   <header class="fa-onb-head">
     <span class="fa-logo-mark"><span class="fa-logo-core"></span></span>
     <ol class="fa-onb-steps">
-      {{ $cur := .Step }}
-      {{ range $i, $name := .StepNames }}
-      <li class="fa-onb-step {{ if eq $i $cur }}is-on{{ end }} {{ if lt $i $cur }}is-done{{ end }}">
-        <span class="fa-onb-step-n">{{ if lt $i $cur }}<i data-lucide="check"></i>{{ else }}{{ inc $i }}{{ end }}</span>
-        <span class="fa-onb-step-l">{{ $name }}</span>
-      </li>
-      {{ end }}
+      <template x-for="(name, i) in stepNames" :key="i">
+        <li class="fa-onb-step" :class="{'is-on': i === step, 'is-done': i < step}">
+          <span class="fa-onb-step-n">
+            <span x-show="i >= step" x-text="i + 1"></span>
+            <span x-show="i < step">&#10003;</span>
+          </span>
+          <span class="fa-onb-step-l" x-text="name"></span>
+        </li>
+      </template>
     </ol>
-    <span class="fa-onb-skip">Step {{ inc .Step }} of {{ len .StepNames }}</span>
+    <span class="fa-onb-skip">Step <span x-text="step + 1"></span> of <span x-text="stepNames.length"></span></span>
   </header>
 
-  {{/* Each step is its own form posting to /onboarding/<step>. The server
-       validates, persists via sp_upsert_profile / sp_create_household, and
-       303s to the next step. No client routing. */}}
-  <form method="post" action="/onboarding/{{ .Step }}">
-    {{ if eq .Step 0 }}{{ template "_onb_welcome"   . }}
-    {{ else if eq .Step 1 }}{{ template "_onb_household" . }}
-    {{ else if eq .Step 2 }}{{ template "_onb_members"   . }}
-    {{ else if eq .Step 3 }}{{ template "_onb_diet"      . }}
-    {{ else }}{{ template "_onb_review" . }}{{ end }}
-  </form>
+  <div x-show="error" class="fa-onb-error" x-text="error"></div>
+
+  {{/* Step 0: Account */}}
+  <div class="fa-onb-pane" x-show="step === 0">
+    <h1>Create your account</h1>
+    <p>You'll use your email to sign in. Your name is how you'll appear to household members.</p>
+    <div class="fa-field fa-field--lg">
+      <label class="fa-field-label">Email</label>
+      <input class="fa-input fa-input--lg" type="email" x-model="form.email"
+        placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="fa-field fa-field--lg">
+      <label class="fa-field-label">Password</label>
+      <input class="fa-input fa-input--lg" type="password" x-model="form.password"
+        placeholder="Choose a strong password" autocomplete="new-password" minlength="8">
+    </div>
+    <div class="fa-field fa-field--lg">
+      <label class="fa-field-label">Your name</label>
+      <input class="fa-input fa-input--lg" type="text" x-model="form.display_name"
+        placeholder="e.g. Jonas">
+    </div>
+    <div class="fa-onb-actions">
+      <button class="fa-btn fa-btn--primary" type="button" @click="next()">Continue</button>
+    </div>
+  </div>
+
+  {{/* Step 1: Household */}}
+  <div class="fa-onb-pane" x-show="step === 1">
+    <h1>Name your household</h1>
+    <p>This is the shared space where your meal plans live.</p>
+    <div class="fa-field fa-field--lg">
+      <label class="fa-field-label">Household name</label>
+      <input class="fa-input fa-input--lg" type="text" x-model="form.household_name"
+        placeholder="e.g. The Hildrestrands">
+    </div>
+    <div class="fa-onb-actions">
+      <button class="fa-btn fa-btn--ghost" type="button" @click="prev()">Back</button>
+      <button class="fa-btn fa-btn--primary" type="button" @click="next()">Continue</button>
+    </div>
+  </div>
+
+  {{/* Step 2: Invite */}}
+  <div class="fa-onb-pane" x-show="step === 2">
+    <h1>Who else lives here?</h1>
+    <p>Invite household members now, or skip and do it later from the Household page.</p>
+    <div class="fa-onb-members">
+      <div class="fa-field">
+        <label class="fa-field-label">Invite by email</label>
+        <input class="fa-input" type="email" x-model="form.invite_email" placeholder="name@example.com">
+      </div>
+    </div>
+    <div class="fa-onb-actions">
+      <button class="fa-btn fa-btn--ghost" type="button" @click="prev()">Back</button>
+      <button class="fa-btn fa-btn--ghost" type="button" @click="form.invite_email = ''; next()">Skip for now</button>
+      <button class="fa-btn fa-btn--primary" type="button" @click="next()">
+        <i data-lucide="send" class="fa-btn-icon"></i>Save &amp; continue
+      </button>
+    </div>
+  </div>
+
+  {{/* Step 3: Diet & Goals */}}
+  <div class="fa-onb-pane" x-show="step === 3">
+    <h1>Your food goals</h1>
+    <p>This shapes your meal plan and which recipes we suggest.</p>
+
+    <div class="fa-field">
+      <span class="fa-field-label">Primary goal</span>
+      <div class="fa-onb-grid">
+        <label class="fa-onb-pick" :class="{'is-on': form.goal === 'lose_weight'}">
+          <input type="radio" name="goal" value="lose_weight" x-model="form.goal" hidden>
+          <i data-lucide="trending-down"></i>Lose weight
+        </label>
+        <label class="fa-onb-pick" :class="{'is-on': form.goal === 'maintain'}">
+          <input type="radio" name="goal" value="maintain" x-model="form.goal" hidden>
+          <i data-lucide="minus"></i>Maintain weight
+        </label>
+        <label class="fa-onb-pick" :class="{'is-on': form.goal === 'build_muscle'}">
+          <input type="radio" name="goal" value="build_muscle" x-model="form.goal" hidden>
+          <i data-lucide="dumbbell"></i>Build muscle
+        </label>
+        <label class="fa-onb-pick" :class="{'is-on': form.goal === 'eat_better'}">
+          <input type="radio" name="goal" value="eat_better" x-model="form.goal" hidden>
+          <i data-lucide="leaf"></i>Eat better
+        </label>
+      </div>
+    </div>
+
+    <div class="fa-field">
+      <span class="fa-field-label">Diet type</span>
+      <div class="fa-seg" role="radiogroup">
+        <label class="fa-seg-opt" :class="{'is-on': form.diet_type === 'omnivore'}">
+          <input type="radio" name="diet_type" value="omnivore" x-model="form.diet_type" hidden>
+          omnivore
+        </label>
+        <label class="fa-seg-opt" :class="{'is-on': form.diet_type === 'pescatarian'}">
+          <input type="radio" name="diet_type" value="pescatarian" x-model="form.diet_type" hidden>
+          pescatarian
+        </label>
+        <label class="fa-seg-opt" :class="{'is-on': form.diet_type === 'vegetarian'}">
+          <input type="radio" name="diet_type" value="vegetarian" x-model="form.diet_type" hidden>
+          vegetarian
+        </label>
+        <label class="fa-seg-opt" :class="{'is-on': form.diet_type === 'vegan'}">
+          <input type="radio" name="diet_type" value="vegan" x-model="form.diet_type" hidden>
+          vegan
+        </label>
+      </div>
+    </div>
+
+    <div class="fa-field">
+      <label class="fa-field-label">Ingredients to avoid <span class="fa-field-hint--inline">(optional)</span></label>
+      <input class="fa-input" type="text" x-model="form.avoid"
+        placeholder="e.g. mushrooms, blue cheese, coriander">
+      <span class="fa-field-hint">Comma-separated. These will never appear in your meals.</span>
+    </div>
+
+    <div class="fa-onb-actions">
+      <button class="fa-btn fa-btn--ghost" type="button" @click="prev()">Back</button>
+      <button class="fa-btn fa-btn--primary" type="button" @click="next()">Continue</button>
+    </div>
+  </div>
+
+  {{/* Step 4: Review */}}
+  <div class="fa-onb-pane" x-show="step === 4">
+    <h1>You're all set</h1>
+    <p>Here's what we'll use to build your first meal plan.</p>
+    <div class="fa-onb-summary">
+      <div><span>Email</span><span x-text="form.email"></span></div>
+      <div><span>Name</span><span x-text="form.display_name"></span></div>
+      <div><span>Household</span><span x-text="form.household_name"></span></div>
+      <div><span>Goal</span><span x-text="form.goal"></span></div>
+      <div><span>Diet</span><span x-text="form.diet_type"></span></div>
+      <div x-show="form.avoid"><span>Avoiding</span><span x-text="form.avoid"></span></div>
+    </div>
+    <div class="fa-onb-actions">
+      <button class="fa-btn fa-btn--ghost" type="button" @click="prev()">Back</button>
+      <button class="fa-btn fa-btn--primary" type="button" @click="submit()" :disabled="loading">
+        <i data-lucide="sparkles" class="fa-btn-icon"></i>
+        <span x-text="loading ? 'Creating…' : 'Generate my first plan'"></span>
+      </button>
+    </div>
+  </div>
 </div>
 {{ end }}
-
-{{/* Step partials live in onboarding/_steps.gohtml */}}
 
 {{ template "_layout" . }}

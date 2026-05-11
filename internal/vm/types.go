@@ -227,15 +227,3 @@ type LandingVM struct {
 	BaseVM
 }
 
-type OnboardingVM struct {
-	BaseVM
-	Step      int // 0..4
-	StepNames []string
-	Form      struct {
-		Household string
-		Members   []MemberVM
-		Goal      string      // maps to nutritional_profiles.goal
-		DietType  string      // maps to nutritional_profiles.diet_type
-		Avoid     string      // comma-separated ingredient dislikes → ingredient_dislikes table
-	}
-}
