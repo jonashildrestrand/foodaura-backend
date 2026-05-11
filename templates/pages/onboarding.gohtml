@@ -210,8 +210,8 @@ document.addEventListener('alpine:init', () => {
 
   {{/* Step 4: Review */}}
   <div class="fa-onb-pane" x-show="step === 4">
-    <h1>You're all set</h1>
-    <p>Here's what we'll use to build your first meal plan.</p>
+    <h1>Confirm your account</h1>
+    <p>Review your details below. Clicking <strong>Create account</strong> will create your account and household.</p>
     <div class="fa-onb-summary">
       <div><span>Email</span><span x-text="form.email"></span></div>
       <div><span>Name</span><span x-text="form.display_name"></span></div>
@@ -223,8 +223,7 @@ document.addEventListener('alpine:init', () => {
     <div class="fa-onb-actions">
       <button class="fa-btn fa-btn--ghost" type="button" @click="prev()">Back</button>
       <button class="fa-btn fa-btn--primary" type="button" @click="submit()" :disabled="loading">
-        <i data-lucide="sparkles" class="fa-btn-icon"></i>
-        <span x-text="loading ? 'Creating…' : 'Generate my first plan'"></span>
+        <span x-text="loading ? 'Creating…' : 'Create account'"></span>
       </button>
     </div>
   </div>
