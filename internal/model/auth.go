@@ -50,17 +50,23 @@ func GetUserByEmail(db *sql.DB, email string) (*User, error) {
 	return nil, rows.Err()
 }
 
-// GetUser fetches a user by ID directly from the users table.
+// GetUser calls sp_auth_get_user and returns the matching user.
+// Returns nil, nil when the user does not exist.
 func GetUser(db *sql.DB, userID string) (*User, error) {
-	row := db.QueryRow("SELECT id, email, display_name FROM users WHERE id = ?", userID)
-	var u User
-	if err := row.Scan(&u.ID, &u.Email, &u.DisplayName); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
+	rows, err := db.Query("CALL sp_auth_get_user(?)", userID)
+	if err != nil {
 		return nil, fmt.Errorf("model.GetUser: %w", err)
 	}
-	return &u, nil
+	defer rows.Close()
+
+	if rows.Next() {
+		var u User
+		if err := rows.Scan(&u.ID, &u.Email, &u.DisplayName); err != nil {
+			return nil, fmt.Errorf("model.GetUser scan: %w", err)
+		}
+		return &u, rows.Err()
+	}
+	return nil, rows.Err()
 }
 
 // CreateSession calls sp_auth_create_session and returns the new session_id.

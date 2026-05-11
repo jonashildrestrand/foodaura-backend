@@ -37,13 +37,13 @@ func GetNotifications(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 
 		base, err := buildBaseVM(db, userID, "notifications")
 		if err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			serverError(w, r, "buildBaseVM notifications", err)
 			return
 		}
 
 		notifs, err := model.GetAllNotifications(db, userID)
 		if err != nil {
-			http.Error(w, "notifications error", http.StatusInternalServerError)
+			serverError(w, r, "GetAllNotifications", err)
 			return
 		}
 
@@ -83,14 +83,12 @@ func GetNotifications(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 				CTA:    cta,
 			}
 
-			// Bucket: today vs earlier this week.
 			createdDay := n.CreatedAt.Truncate(24 * time.Hour)
 			if !createdDay.Before(today) {
 				todayVMs = append(todayVMs, notifVM)
 			} else if !createdDay.Before(mondayOfWeek) {
 				weekVMs = append(weekVMs, notifVM)
 			} else {
-				// Issue #39: all others also go into Week.
 				weekVMs = append(weekVMs, notifVM)
 			}
 		}
@@ -105,7 +103,7 @@ func GetNotifications(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 		}
 
 		if err := v.Render(w, "notifications.gohtml", data); err != nil {
-			http.Error(w, "render error", http.StatusInternalServerError)
+			serverError(w, r, "render notifications", err)
 		}
 	}
 }
@@ -116,7 +114,7 @@ func PostMarkAllRead(db *sql.DB) http.HandlerFunc {
 		userID := r.Context().Value(middleware.UserIDKey).(string)
 
 		if err := model.MarkAllRead(db, userID); err != nil {
-			http.Error(w, "mark all read error", http.StatusInternalServerError)
+			serverError(w, r, "MarkAllRead", err)
 			return
 		}
 
@@ -131,7 +129,7 @@ func PostMarkRead(db *sql.DB) http.HandlerFunc {
 		notifID := chi.URLParam(r, "id")
 
 		if err := model.MarkRead(db, notifID, userID); err != nil {
-			http.Error(w, "mark read error", http.StatusInternalServerError)
+			serverError(w, r, "MarkRead", err)
 			return
 		}
 

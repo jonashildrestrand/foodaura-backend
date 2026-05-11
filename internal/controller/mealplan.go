@@ -57,13 +57,13 @@ func GetPlan(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 
 		base, err := buildBaseVM(db, userID, "plan")
 		if err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			serverError(w, r, "buildBaseVM plan", err)
 			return
 		}
 
 		householdID, err := model.FindHouseholdByUser(db, userID)
 		if err != nil || householdID == "" {
-			http.Redirect(w, r, "/onboarding/1", http.StatusSeeOther)
+			http.Redirect(w, r, "/onboarding", http.StatusSeeOther)
 			return
 		}
 
@@ -71,13 +71,13 @@ func GetPlan(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 
 		planID, err := model.GetOrCreateMealPlan(db, householdID, monday, userID)
 		if err != nil {
-			http.Error(w, "plan error", http.StatusInternalServerError)
+			serverError(w, r, "GetOrCreateMealPlan", err)
 			return
 		}
 
 		plan, slots, participants, err := model.GetMealPlan(db, planID, userID)
 		if err != nil {
-			http.Error(w, "plan fetch error", http.StatusInternalServerError)
+			serverError(w, r, "GetMealPlan", err)
 			return
 		}
 		_ = plan
@@ -107,7 +107,6 @@ func GetPlan(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 			}
 		}
 
-		// Build DayColumnVMs.
 		days := make([]vm.DayColumnVM, 7)
 		for d := 0; d < 7; d++ {
 			date := monday.AddDate(0, 0, d)
@@ -149,7 +148,6 @@ func GetPlan(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 			}
 		}
 
-		// Calculate plan stats.
 		mealsPlanned := 0
 		emptySlots := 0
 		for _, s := range slots {
@@ -160,7 +158,6 @@ func GetPlan(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 			}
 		}
 
-		// Count distinct participants across all slots.
 		distinctUsers := make(map[string]struct{})
 		for _, p := range participants {
 			distinctUsers[p.UserID] = struct{}{}
@@ -187,7 +184,7 @@ func GetPlan(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 		data.Stats.MembersIn = membersIn
 
 		if err := v.Render(w, "plan.gohtml", data); err != nil {
-			http.Error(w, "render error", http.StatusInternalServerError)
+			serverError(w, r, "render plan", err)
 		}
 	}
 }
@@ -210,7 +207,7 @@ func PostAssignRecipe(db *sql.DB) http.HandlerFunc {
 		}
 
 		if err := model.AssignRecipe(db, slotID, recipeID, []string{userID}); err != nil {
-			http.Error(w, "assign error: "+err.Error(), http.StatusInternalServerError)
+			serverError(w, r, "AssignRecipe", err)
 			return
 		}
 
@@ -224,7 +221,7 @@ func PostClearSlot(db *sql.DB) http.HandlerFunc {
 		slotID := chi.URLParam(r, "slotID")
 
 		if err := model.ClearSlot(db, slotID); err != nil {
-			http.Error(w, "clear error: "+err.Error(), http.StatusInternalServerError)
+			serverError(w, r, "ClearSlot", err)
 			return
 		}
 

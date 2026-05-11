@@ -20,16 +20,15 @@ func GetShopping(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 
 		planID := chi.URLParam(r, "planID")
 		if planID == "" {
-			// Derive the current plan and redirect.
 			householdID, err := model.FindHouseholdByUser(db, userID)
 			if err != nil || householdID == "" {
-				http.Redirect(w, r, "/onboarding/1", http.StatusSeeOther)
+				http.Redirect(w, r, "/onboarding", http.StatusSeeOther)
 				return
 			}
 			monday := currentWeekMonday()
 			id, err := model.GetOrCreateMealPlan(db, householdID, monday, userID)
 			if err != nil {
-				http.Error(w, "plan error", http.StatusInternalServerError)
+				serverError(w, r, "GetOrCreateMealPlan shopping", err)
 				return
 			}
 			http.Redirect(w, r, "/shoppinglist/"+id, http.StatusSeeOther)
@@ -38,13 +37,13 @@ func GetShopping(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 
 		base, err := buildBaseVM(db, userID, "shopping")
 		if err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			serverError(w, r, "buildBaseVM shopping", err)
 			return
 		}
 
 		items, err := model.GetShoppingList(db, planID, userID)
 		if err != nil {
-			http.Error(w, "shopping list error", http.StatusInternalServerError)
+			serverError(w, r, "GetShoppingList", err)
 			return
 		}
 
@@ -103,7 +102,6 @@ func GetShopping(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 			})
 		}
 
-		// Build week range from the plan's start date.
 		weekRange := ""
 		history, _ := model.GetHistory(db, "", userID)
 		for _, h := range history {
@@ -128,7 +126,7 @@ func GetShopping(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 		}
 
 		if err := v.Render(w, "shopping.gohtml", data); err != nil {
-			http.Error(w, "render error", http.StatusInternalServerError)
+			serverError(w, r, "render shopping", err)
 		}
 	}
 }
@@ -144,14 +142,10 @@ func PostToggleItem(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// Toggle: if the form sends "checked=1" it's being checked, otherwise unchecked.
-		// Since we don't have current state from the form, read it from the query or just toggle.
-		// The template posts to /shoppinglist/{planID}/item/{itemID}/toggle — we derive state
-		// from the form value "checked" (1 = checked, 0 or absent = unchecked).
 		isChecked := r.FormValue("checked") == "1"
 
 		if err := model.ToggleItem(db, itemID, isChecked); err != nil {
-			http.Error(w, "toggle error", http.StatusInternalServerError)
+			serverError(w, r, "ToggleItem", err)
 			return
 		}
 

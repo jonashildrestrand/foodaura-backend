@@ -2,6 +2,8 @@ package controller
 
 import (
 	"database/sql"
+	"encoding/json"
+	"html/template"
 	"net/http"
 
 	"github.com/foodaura/backend/internal/model"
@@ -13,12 +15,12 @@ func GetOnboarding(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		goals, err := model.GetGoals(db)
 		if err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			serverError(w, r, "GetGoals", err)
 			return
 		}
 		dietTypes, err := model.GetDietTypes(db)
 		if err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			serverError(w, r, "GetDietTypes", err)
 			return
 		}
 
@@ -31,13 +33,26 @@ func GetOnboarding(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 			dietOpts[i] = vm.DietTypeOption{Value: d.Value, Label: d.Label}
 		}
 
+		goalsJSON, err := json.Marshal(goalOpts)
+		if err != nil {
+			serverError(w, r, "marshal goals", err)
+			return
+		}
+		dietJSON, err := json.Marshal(dietOpts)
+		if err != nil {
+			serverError(w, r, "marshal diet types", err)
+			return
+		}
+
 		data := vm.OnboardingVM{
-			BaseVM:    vm.BaseVM{Chrome: vm.ChromeVM{ShowSidebar: false}},
-			Goals:     goalOpts,
-			DietTypes: dietOpts,
+			BaseVM:      vm.BaseVM{Chrome: vm.ChromeVM{ShowSidebar: false}},
+			Goals:       goalOpts,
+			DietTypes:   dietOpts,
+			GoalsJS:     template.JS(goalsJSON),
+			DietTypesJS: template.JS(dietJSON),
 		}
 		if err := v.Render(w, "onboarding.gohtml", data); err != nil {
-			http.Error(w, "render error", http.StatusInternalServerError)
+			serverError(w, r, "render onboarding", err)
 		}
 	}
 }

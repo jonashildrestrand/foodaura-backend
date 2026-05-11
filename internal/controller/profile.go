@@ -18,7 +18,7 @@ func GetProfileSetup(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 
 		base, err := buildBaseVM(db, userID, "settings")
 		if err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			serverError(w, r, "buildBaseVM profile/setup", err)
 			return
 		}
 
@@ -32,7 +32,7 @@ func GetProfileSetup(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 		}
 
 		if err := v.Render(w, "settings.gohtml", data); err != nil {
-			http.Error(w, "render error", http.StatusInternalServerError)
+			serverError(w, r, "render profile/setup", err)
 		}
 	}
 }
@@ -47,7 +47,7 @@ func PostProfileSetup(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 		}
 
 		if err := saveProfile(db, userID, r); err != nil {
-			http.Error(w, "profile error: "+err.Error(), http.StatusInternalServerError)
+			serverError(w, r, "saveProfile setup", err)
 			return
 		}
 
@@ -62,7 +62,7 @@ func GetProfileEdit(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 
 		base, err := buildBaseVM(db, userID, "settings")
 		if err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			serverError(w, r, "buildBaseVM profile/edit", err)
 			return
 		}
 
@@ -88,7 +88,7 @@ func GetProfileEdit(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 		}
 
 		if err := v.Render(w, "settings.gohtml", data); err != nil {
-			http.Error(w, "render error", http.StatusInternalServerError)
+			serverError(w, r, "render profile/edit", err)
 		}
 	}
 }
@@ -103,7 +103,7 @@ func PostProfileEdit(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 		}
 
 		if err := saveProfile(db, userID, r); err != nil {
-			http.Error(w, "profile error: "+err.Error(), http.StatusInternalServerError)
+			serverError(w, r, "saveProfile edit", err)
 			return
 		}
 

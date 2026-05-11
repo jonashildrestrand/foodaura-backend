@@ -1,0 +1,17 @@
+{{ define "title" }}{{ .Code }} — Error{{ end }}
+
+{{ define "main" }}
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px">
+  <div style="width:100%;max-width:400px;text-align:center">
+    <a href="/" style="display:inline-flex;margin-bottom:40px">
+      <span class="fa-logo-mark" style="width:44px;height:44px;display:inline-flex"></span>
+    </a>
+    <p style="font-size:72px;font-weight:700;line-height:1;color:var(--primary);margin:0 0 16px">{{ .Code }}</p>
+    <h1 style="font-size:24px;color:var(--fg-1);margin:0 0 12px">{{ .Title }}</h1>
+    <p style="font-size:15px;color:var(--fg-3);margin:0 0 40px">{{ .Message }}</p>
+    <a href="/" class="fa-btn fa-btn--primary" style="display:inline-flex;justify-content:center">Go home</a>
+  </div>
+</div>
+{{ end }}
+
+{{ template "_layout" . }}

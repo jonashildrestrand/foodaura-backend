@@ -2,7 +2,9 @@ package main
 
 import (
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/foodaura/backend/internal/config"
 	"github.com/joho/godotenv"
@@ -15,8 +17,12 @@ import (
 )
 
 func main() {
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	})))
+
 	if err := godotenv.Load(); err != nil {
-		log.Println("no .env file found, using environment variables")
+		slog.Debug("no .env file found, using environment variables")
 	}
 
 	cfg := config.Load()
@@ -26,14 +32,17 @@ func main() {
 		log.Fatalf("db.Open: %v", err)
 	}
 	if err := db.Ping(); err != nil {
-		log.Printf("warning: db ping failed: %v", err)
+		slog.Warn("db ping failed", "error", err)
 	}
 
 	renderer := view.NewRenderer("templates")
+	controller.InitErrorRenderer(renderer)
 
 	r := chi.NewRouter()
-	r.Use(chimw.Logger)
+	r.Use(middleware.RequestLogger)
 	r.Use(chimw.Recoverer)
+
+	r.NotFound(controller.NotFoundHandler())
 
 	// Static files.
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
@@ -93,7 +102,7 @@ func main() {
 	})
 
 	addr := ":" + cfg.Port
-	log.Printf("foodaura-backend listening on %s", addr)
+	slog.Info("foodaura-backend listening", "addr", addr)
 	if err := http.ListenAndServe(addr, r); err != nil {
 		log.Fatalf("ListenAndServe: %v", err)
 	}

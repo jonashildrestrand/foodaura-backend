@@ -1,0 +1,20 @@
+time=2026-05-11T23:51:54.019+02:00 level=INFO msg="foodaura-backend listening" addr=:8080
+time=2026-05-11T23:51:56.367+02:00 level=WARN msg=http method=GET path=/plansss status=404 ms=0
+time=2026-05-11T23:51:56.375+02:00 level=INFO msg=http method=GET path=/static/app.css status=304 ms=0
+time=2026-05-11T23:52:04.105+02:00 level=INFO msg=http method=GET path=/ status=303 ms=0
+time=2026-05-11T23:52:04.106+02:00 level=INFO msg=http method=GET path=/login status=200 ms=0
+time=2026-05-11T23:52:11.123+02:00 level=INFO msg=http method=POST path=/login status=303 ms=58
+time=2026-05-11T23:52:11.128+02:00 level=INFO msg=http method=GET path=/plan status=200 ms=3
+time=2026-05-11T23:52:16.761+02:00 level=WARN msg=http method=GET path=/plans status=404 ms=0
+time=2026-05-11T23:52:17.901+02:00 level=INFO msg=http method=GET path=/ status=303 ms=0
+time=2026-05-11T23:52:17.902+02:00 level=INFO msg=http method=GET path=/login status=200 ms=0
+time=2026-05-11T23:52:21.042+02:00 level=INFO msg=http method=GET path=/onboarding status=200 ms=0
+time=2026-05-11T23:52:32.087+02:00 level=INFO msg=http method=GET path=/ status=303 ms=0
+time=2026-05-11T23:52:32.088+02:00 level=INFO msg=http method=GET path=/login status=200 ms=0
+time=2026-05-11T23:52:48.835+02:00 level=INFO msg=http method=GET path=/ status=303 ms=0
+time=2026-05-11T23:52:48.837+02:00 level=INFO msg=http method=GET path=/login status=200 ms=0
+time=2026-05-11T23:52:48.845+02:00 level=INFO msg=http method=GET path=/static/app.css status=304 ms=0
+time=2026-05-11T23:52:54.001+02:00 level=INFO msg=http method=GET path=/plan status=200 ms=11
+time=2026-05-11T23:52:57.398+02:00 level=INFO msg=http method=GET path=/login status=200 ms=0
+time=2026-05-11T23:54:35.004+02:00 level=INFO msg=http method=GET path=/login status=200 ms=0
+time=2026-05-11T23:54:35.014+02:00 level=INFO msg=http method=GET path=/static/app.css status=304 ms=0

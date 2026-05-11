@@ -68,15 +68,19 @@ func MarkAllRead(db *sql.DB, userID string) error {
 	return rows.Close()
 }
 
-// UnreadCount returns the count of unread notifications for a user.
+// UnreadCount calls sp_notification_unread_count and returns the number of unread notifications.
 func UnreadCount(db *sql.DB, userID string) (int, error) {
-	row := db.QueryRow(
-		"SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0",
-		userID,
-	)
-	var count int
-	if err := row.Scan(&count); err != nil {
+	rows, err := db.Query("CALL sp_notification_unread_count(?)", userID)
+	if err != nil {
 		return 0, fmt.Errorf("model.UnreadCount: %w", err)
 	}
-	return count, nil
+	defer rows.Close()
+
+	var count int
+	if rows.Next() {
+		if err := rows.Scan(&count); err != nil {
+			return 0, fmt.Errorf("model.UnreadCount scan: %w", err)
+		}
+	}
+	return count, rows.Err()
 }

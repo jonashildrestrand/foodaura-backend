@@ -53,13 +53,13 @@ func PostUsers(db *sql.DB) http.HandlerFunc {
 
 		hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 		if err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			serverError(w, r, "bcrypt", err)
 			return
 		}
 
 		tx, err := db.Begin()
 		if err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			serverError(w, r, "db.Begin", err)
 			return
 		}
 		defer tx.Rollback() //nolint:errcheck
@@ -70,7 +70,7 @@ func PostUsers(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		if userID == "" {
-			http.Error(w, "could not create account", http.StatusInternalServerError)
+			serverError(w, r, "sp_auth_create_user returned empty ID", nil)
 			return
 		}
 
@@ -97,7 +97,7 @@ func PostUsers(db *sql.DB) http.HandlerFunc {
 
 		raw := make([]byte, 32)
 		if _, err := rand.Read(raw); err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			serverError(w, r, "rand.Read", err)
 			return
 		}
 		token := hex.EncodeToString(raw)

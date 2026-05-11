@@ -7,11 +7,15 @@ SET NAMES utf8mb4;
 
 -- ─── foodaura_backend — execute all stored procedures ────────────────────────
 
+GRANT EXECUTE ON PROCEDURE foodaura.sp_goals_list                    TO 'foodaura_backend'@'%';
+GRANT EXECUTE ON PROCEDURE foodaura.sp_diet_types_list               TO 'foodaura_backend'@'%';
+GRANT EXECUTE ON PROCEDURE foodaura.sp_auth_get_user                 TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_auth_create_user              TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_auth_get_user_by_email        TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_auth_create_session           TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_auth_get_session              TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_auth_delete_session           TO 'foodaura_backend'@'%';
+GRANT EXECUTE ON PROCEDURE foodaura.sp_household_find_by_user        TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_household_create              TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_household_get                 TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_household_invite              TO 'foodaura_backend'@'%';
@@ -43,6 +47,7 @@ GRANT EXECUTE ON PROCEDURE foodaura.sp_mealplan_get_nutrition_summary TO 'foodau
 GRANT EXECUTE ON PROCEDURE foodaura.sp_shoppinglist_derive           TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_shoppinglist_get              TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_shoppinglist_toggle_item      TO 'foodaura_backend'@'%';
+GRANT EXECUTE ON PROCEDURE foodaura.sp_notification_unread_count     TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_notification_create           TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_notification_get_all          TO 'foodaura_backend'@'%';
 GRANT EXECUTE ON PROCEDURE foodaura.sp_notification_mark_read        TO 'foodaura_backend'@'%';

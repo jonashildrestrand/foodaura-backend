@@ -22,10 +22,11 @@ button { font-family: inherit; }
   display: flex; flex-direction: column; gap: 8px;
   position: sticky; top: 0; height: 100vh;
 }
-.fa-logo { display: flex; align-items: center; gap: 10px; padding: 4px 8px 16px; }
-.fa-logo-mark { width: 28px; height: 28px; border-radius: 999px; background: var(--primary); position: relative; flex: none; }
+.fa-logo { display: flex; align-items: center; gap: 10px; padding: 4px 8px 16px; text-decoration: none; }
+.fa-logo:hover, .fa-logo:focus { text-decoration: none; }
+.fa-logo-mark { width: 22px; height: 22px; border-radius: 999px; background: var(--primary); position: relative; flex: none; }
 .fa-logo-mark::before { content: ""; position: absolute; inset: -6px; border-radius: 999px; border: 2px solid var(--primary); opacity: .4; }
-.fa-logo-word { font-family: var(--font-display); font-size: 22px; font-weight: 500; letter-spacing: -0.015em; }
+.fa-logo-word { font-family: var(--font-display); font-size: 22px; font-weight: 500; letter-spacing: -0.015em; text-decoration: none; }
 
 .fa-nav { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
 .fa-nav-item {
@@ -36,7 +37,7 @@ button { font-family: inherit; }
 }
 .fa-nav-item:hover { background: var(--surface-2); color: var(--fg-1); }
 .fa-nav-item.is-active { background: var(--surface-2); color: var(--fg-1); font-weight: 600; }
-.fa-nav-item i[data-lucide] { width: 18px; height: 18px; }
+.fa-nav-item i[data-lucide], .fa-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
 .fa-pill { margin-left: auto; background: var(--primary); color: var(--primary-ink); border-radius: 999px; font-size: 11px; font-weight: 600; padding: 2px 8px; }
 
 .fa-side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 2px; }

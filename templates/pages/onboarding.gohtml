@@ -3,8 +3,8 @@
 {{ define "main" }}
 <style>[x-cloak]{display:none}</style>
 <script>
-const FA_GOALS      = {{ toJS .Goals }};
-const FA_DIET_TYPES = {{ toJS .DietTypes }};
+const FA_GOALS      = {{.GoalsJS}};
+const FA_DIET_TYPES = {{.DietTypesJS}};
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('onboarding', () => ({

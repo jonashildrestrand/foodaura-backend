@@ -1,12 +1,16 @@
 package view
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"log/slog"
 	"net/http"
 	"path/filepath"
 	"strings"
+
+	"github.com/foodaura/backend/internal/vm"
 )
 
 var funcMap = template.FuncMap{
@@ -48,41 +52,94 @@ var partials = []string{
 	"partials/_invite_modal.gohtml",
 }
 
-// Render parses _layout + partials + the page template, then executes "_layout".
-// pageFile is relative to templates/pages/, e.g. "login.gohtml".
-// For onboarding pages, it also includes pages/onboarding/_steps.gohtml.
-func (r *Renderer) Render(w http.ResponseWriter, pageFile string, data any) error {
+var errorTitles = map[int]string{
+	http.StatusNotFound:            "Page not found",
+	http.StatusInternalServerError: "Something went wrong",
+	http.StatusForbidden:           "Access denied",
+	http.StatusUnauthorized:        "Not authorised",
+}
+
+var errorMessages = map[int]string{
+	http.StatusNotFound:            "The page you're looking for doesn't exist.",
+	http.StatusInternalServerError: "An unexpected error occurred. Please try again in a moment.",
+	http.StatusForbidden:           "You don't have permission to view this page.",
+	http.StatusUnauthorized:        "You need to sign in to view this page.",
+}
+
+// RenderError renders the error page template with the given HTTP status code.
+// Falls back to plain-text http.Error if template rendering itself fails.
+func (r *Renderer) RenderError(w http.ResponseWriter, status int) {
+	title, ok := errorTitles[status]
+	if !ok {
+		title = http.StatusText(status)
+	}
+	msg, ok := errorMessages[status]
+	if !ok {
+		msg = "An error occurred."
+	}
+	data := vm.ErrorVM{
+		BaseVM:  vm.BaseVM{Chrome: vm.ChromeVM{ShowSidebar: false}},
+		Code:    status,
+		Title:   title,
+		Message: msg,
+	}
+
+	buf, err := r.renderBuffer("error.gohtml", data)
+	if err != nil {
+		slog.Error("error page render failed", "status", status, "error", err)
+		http.Error(w, http.StatusText(status), status)
+		return
+	}
+
+	// Headers are set AFTER the buffer is ready so a render failure can still
+	// send a clean plain-text 500 via http.Error above.
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(status)
+	buf.WriteTo(w)
+}
+
+// renderBuffer parses and executes the page template into a buffer without
+// touching the ResponseWriter — callers decide which status to send.
+func (r *Renderer) renderBuffer(pageFile string, data any) (*bytes.Buffer, error) {
 	files := make([]string, 0, len(partials)+2)
 
-	// Always include the layout and shared partials.
 	for _, p := range partials {
 		files = append(files, filepath.Join(r.dir, p))
 	}
-
-	// The page itself.
 	files = append(files, filepath.Join(r.dir, "pages", pageFile))
 
-	// For onboarding, also include the step partials.
 	if strings.HasPrefix(pageFile, "onboarding") {
-		stepsFile := filepath.Join(r.dir, "pages", "onboarding", "_steps.gohtml")
-		files = append(files, stepsFile)
+		files = append(files, filepath.Join(r.dir, "pages", "onboarding", "_steps.gohtml"))
 	}
 
-	// Parse from the first file so the template name is derived from _layout.gohtml.
 	tmpl, err := template.New(filepath.Base(files[0])).Funcs(funcMap).ParseFiles(files...)
 	if err != nil {
-		return fmt.Errorf("view.Render parse %q: %w", pageFile, err)
+		slog.Error("template parse failed", "page", pageFile, "error", err)
+		return nil, fmt.Errorf("view.Render parse %q: %w", pageFile, err)
 	}
-
-	// Parse the inline _toast definition (overrides any definition in partials).
 	tmpl, err = tmpl.Parse(toastTmpl)
 	if err != nil {
-		return fmt.Errorf("view.Render parse toast: %w", err)
+		slog.Error("template parse toast failed", "error", err)
+		return nil, fmt.Errorf("view.Render parse toast: %w", err)
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := tmpl.ExecuteTemplate(w, "_layout", data); err != nil {
-		return fmt.Errorf("view.Render execute %q: %w", pageFile, err)
+	var buf bytes.Buffer
+	if err := tmpl.ExecuteTemplate(&buf, "_layout", data); err != nil {
+		slog.Error("template execute failed", "page", pageFile, "error", err)
+		return nil, fmt.Errorf("view.Render execute %q: %w", pageFile, err)
 	}
-	return nil
+	return &buf, nil
+}
+
+// Render parses _layout + partials + the page template, executes into a buffer,
+// then writes the result to w. Buffering ensures a template execution error
+// never produces a partial response — the caller can still send a proper error.
+func (r *Renderer) Render(w http.ResponseWriter, pageFile string, data any) error {
+	buf, err := r.renderBuffer(pageFile, data)
+	if err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, err = buf.WriteTo(w)
+	return err
 }

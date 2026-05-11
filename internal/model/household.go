@@ -127,19 +127,20 @@ func LeaveHousehold(db *sql.DB, householdID, userID string) error {
 	return rows.Close()
 }
 
-// FindHouseholdByUser returns the household_id for the user's household.
+// FindHouseholdByUser calls sp_household_find_by_user and returns the household_id.
 // It returns an empty string (and no error) when the user has no household.
 func FindHouseholdByUser(db *sql.DB, userID string) (string, error) {
-	row := db.QueryRow(
-		"SELECT household_id FROM household_members WHERE user_id = ? LIMIT 1",
-		userID,
-	)
-	var householdID string
-	if err := row.Scan(&householdID); err != nil {
-		if err == sql.ErrNoRows {
-			return "", nil
-		}
+	rows, err := db.Query("CALL sp_household_find_by_user(?)", userID)
+	if err != nil {
 		return "", fmt.Errorf("model.FindHouseholdByUser: %w", err)
 	}
-	return householdID, nil
+	defer rows.Close()
+
+	var householdID string
+	if rows.Next() {
+		if err := rows.Scan(&householdID); err != nil {
+			return "", fmt.Errorf("model.FindHouseholdByUser scan: %w", err)
+		}
+	}
+	return householdID, rows.Err()
 }

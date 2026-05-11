@@ -77,4 +77,17 @@ BEGIN
     AND is_read = FALSE;
 END$$
 
+-- ─── sp_notification_unread_count ────────────────────────────────────────────
+-- Return the count of unread notifications for a user.
+
+CREATE OR REPLACE PROCEDURE sp_notification_unread_count(
+  IN p_user_id CHAR(36)
+)
+SQL SECURITY DEFINER
+BEGIN
+  SELECT COUNT(*) AS unread_count
+  FROM notifications
+  WHERE user_id = p_user_id AND is_read = FALSE;
+END$$
+
 DELIMITER ;

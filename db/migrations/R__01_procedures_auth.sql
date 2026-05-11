@@ -105,4 +105,15 @@ BEGIN
   DELETE FROM sessions WHERE token_hash = p_token_hash;
 END$$
 
+-- ─── sp_auth_get_user ────────────────────────────────────────────────────────
+-- Fetch a user by ID. Returns the row or an empty result set.
+
+CREATE OR REPLACE PROCEDURE sp_auth_get_user(
+  IN p_user_id CHAR(36)
+)
+SQL SECURITY DEFINER
+BEGIN
+  SELECT id, email, display_name FROM users WHERE id = p_user_id;
+END$$
+
 DELIMITER ;

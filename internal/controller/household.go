@@ -23,20 +23,19 @@ func GetHousehold(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 
 		base, err := buildBaseVM(db, userID, "household")
 		if err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			serverError(w, r, "buildBaseVM household", err)
 			return
 		}
 
 		householdID, err := model.FindHouseholdByUser(db, userID)
 		if err != nil || householdID == "" {
-			// User has no household yet — redirect to onboarding.
-			http.Redirect(w, r, "/onboarding/1", http.StatusSeeOther)
+			http.Redirect(w, r, "/onboarding", http.StatusSeeOther)
 			return
 		}
 
 		household, members, err := model.GetHousehold(db, householdID, userID)
 		if err != nil {
-			http.Error(w, "household error", http.StatusInternalServerError)
+			serverError(w, r, "GetHousehold", err)
 			return
 		}
 
@@ -91,7 +90,7 @@ func GetHousehold(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 		}
 
 		if err := v.Render(w, "household.gohtml", data); err != nil {
-			http.Error(w, "render error", http.StatusInternalServerError)
+			serverError(w, r, "render household", err)
 		}
 	}
 }
@@ -119,7 +118,7 @@ func PostInvite(db *sql.DB) http.HandlerFunc {
 
 		raw := make([]byte, 32)
 		if _, err := rand.Read(raw); err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			serverError(w, r, "rand.Read", err)
 			return
 		}
 		sum := sha256.Sum256(raw)
@@ -127,7 +126,7 @@ func PostInvite(db *sql.DB) http.HandlerFunc {
 		expiresAt := time.Now().Add(7 * 24 * time.Hour)
 
 		if _, err := model.InviteMember(db, householdID, userID, email, tokenHash, expiresAt); err != nil {
-			http.Error(w, "invite error: "+err.Error(), http.StatusInternalServerError)
+			serverError(w, r, "InviteMember", err)
 			return
 		}
 
@@ -172,11 +171,11 @@ func PostLeaveHousehold(db *sql.DB) http.HandlerFunc {
 		}
 
 		if err := model.LeaveHousehold(db, householdID, userID); err != nil {
-			http.Error(w, "leave error: "+err.Error(), http.StatusInternalServerError)
+			serverError(w, r, "LeaveHousehold", err)
 			return
 		}
 
-		http.Redirect(w, r, "/onboarding/1", http.StatusSeeOther)
+		http.Redirect(w, r, "/onboarding", http.StatusSeeOther)
 	}
 }
 
@@ -202,7 +201,7 @@ func PostRemoveMember(db *sql.DB) http.HandlerFunc {
 		}
 
 		if err := model.RemoveMember(db, householdID, targetUserID, userID); err != nil {
-			http.Error(w, "remove error: "+err.Error(), http.StatusInternalServerError)
+			serverError(w, r, "RemoveMember", err)
 			return
 		}
 

@@ -6,6 +6,8 @@
 // Every VM embeds BaseVM so _layout.gohtml can render the chrome consistently.
 package vm
 
+import "html/template"
+
 // ───────────────────────── chrome ─────────────────────────
 
 type BaseVM struct {
@@ -227,6 +229,13 @@ type LandingVM struct {
 	BaseVM
 }
 
+type ErrorVM struct {
+	BaseVM
+	Code    int
+	Title   string
+	Message string
+}
+
 type GoalOption struct {
 	Value string `json:"value"`
 	Label string `json:"label"`
@@ -240,7 +249,9 @@ type DietTypeOption struct {
 
 type OnboardingVM struct {
 	BaseVM
-	Goals     []GoalOption
-	DietTypes []DietTypeOption
+	Goals       []GoalOption
+	DietTypes   []DietTypeOption
+	GoalsJS     template.JS
+	DietTypesJS template.JS
 }
 

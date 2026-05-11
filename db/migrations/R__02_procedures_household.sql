@@ -304,4 +304,19 @@ BEGIN
   ORDER BY id2.user_id, id2.ingredient_name;
 END$$
 
+-- ─── sp_household_find_by_user ────────────────────────────────────────────────
+-- Return the household_id for the household the user belongs to.
+-- Returns an empty result set if the user has no household.
+
+CREATE OR REPLACE PROCEDURE sp_household_find_by_user(
+  IN p_user_id CHAR(36)
+)
+SQL SECURITY DEFINER
+BEGIN
+  SELECT household_id
+  FROM household_members
+  WHERE user_id = p_user_id
+  LIMIT 1;
+END$$
+
 DELIMITER ;

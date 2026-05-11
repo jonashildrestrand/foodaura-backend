@@ -32,17 +32,16 @@ func GetDiscover(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 
 		base, err := buildBaseVM(db, userID, "discover")
 		if err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			serverError(w, r, "buildBaseVM discover", err)
 			return
 		}
 
 		searchTerm := r.URL.Query().Get("q")
 		activeTagID := r.URL.Query().Get("filter")
 
-		// Load all tags for filter chips.
 		allTags, err := model.ListTags(db, "")
 		if err != nil {
-			http.Error(w, "tag error", http.StatusInternalServerError)
+			serverError(w, r, "ListTags", err)
 			return
 		}
 
@@ -52,7 +51,6 @@ func GetDiscover(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 			Active bool
 		}, 0, len(allTags)+1)
 
-		// "All" filter.
 		filters = append(filters, struct {
 			Label  string
 			Value  string
@@ -71,14 +69,12 @@ func GetDiscover(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 			})
 		}
 
-		// Find recipes.
 		recipes, tags, err := model.FindRecipes(db, userID, "", 0, searchTerm, activeTagID, 50, 0)
 		if err != nil {
-			http.Error(w, "recipe error", http.StatusInternalServerError)
+			serverError(w, r, "FindRecipes", err)
 			return
 		}
 
-		// Build tag index: recipeID → []vm.TagVM.
 		tagsByRecipe := make(map[string][]vm.TagVM)
 		for _, t := range tags {
 			tagsByRecipe[t.RecipeID] = append(tagsByRecipe[t.RecipeID], vm.TagVM{
@@ -88,19 +84,17 @@ func GetDiscover(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 		}
 
 		recipeVMs := make([]vm.RecipeCardVM, 0, len(recipes))
-		for _, r := range recipes {
-			// Derive tone from first tag category.
+		for _, rc := range recipes {
 			tone := "neutral"
-			if tgs := tagsByRecipe[r.ID]; len(tgs) > 0 {
+			if tgs := tagsByRecipe[rc.ID]; len(tgs) > 0 {
 				tone = tgs[0].Tone
 			}
-
 			recipeVMs = append(recipeVMs, vm.RecipeCardVM{
-				Name:           r.Title,
+				Name:           rc.Title,
 				Tone:           tone,
-				MinutesHandsOn: r.CookTimeMinutes,
-				Servings:       r.ServingsBase,
-				Tags:           tagsByRecipe[r.ID],
+				MinutesHandsOn: rc.CookTimeMinutes,
+				Servings:       rc.ServingsBase,
+				Tags:           tagsByRecipe[rc.ID],
 			})
 		}
 
@@ -115,7 +109,7 @@ func GetDiscover(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 		}
 
 		if err := v.Render(w, "discover.gohtml", data); err != nil {
-			http.Error(w, "render error", http.StatusInternalServerError)
+			serverError(w, r, "render discover", err)
 		}
 	}
 }
@@ -128,13 +122,13 @@ func GetRecipe(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 
 		base, err := buildBaseVM(db, userID, "discover")
 		if err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			serverError(w, r, "buildBaseVM recipe", err)
 			return
 		}
 
 		detail, ingredients, steps, err := model.GetRecipe(db, recipeID)
 		if err != nil {
-			http.Error(w, "recipe error", http.StatusInternalServerError)
+			serverError(w, r, "GetRecipe", err)
 			return
 		}
 		if detail == nil {
@@ -142,7 +136,6 @@ func GetRecipe(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 			return
 		}
 
-		// Build ingredient VMs.
 		ingVMs := make([]struct {
 			Quantity string
 			Unit     string
@@ -160,7 +153,6 @@ func GetRecipe(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 			})
 		}
 
-		// Build step strings.
 		stepStrs := make([]string, 0, len(steps))
 		for _, s := range steps {
 			stepStrs = append(stepStrs, s.Instruction)
@@ -172,9 +164,9 @@ func GetRecipe(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 				Title: detail.Title,
 				Actions: []vm.ActionVM{
 					{
-						Label:   "Like",
-						Icon:    "heart",
-						Variant: "ghost",
+						Label:      "Like",
+						Icon:       "heart",
+						Variant:    "ghost",
 						FormAction: "/recipes/" + recipeID + "/preference",
 						FormMethod: "post",
 					},
@@ -195,7 +187,7 @@ func GetRecipe(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 		}
 
 		if err := v.Render(w, "recipe.gohtml", data); err != nil {
-			http.Error(w, "render error", http.StatusInternalServerError)
+			serverError(w, r, "render recipe", err)
 		}
 	}
 }
@@ -217,7 +209,7 @@ func PostRecipePreference(db *sql.DB) http.HandlerFunc {
 		}
 
 		if err := model.SetRecipePreference(db, userID, recipeID, preference); err != nil {
-			http.Error(w, "preference error", http.StatusInternalServerError)
+			serverError(w, r, "SetRecipePreference", err)
 			return
 		}
 

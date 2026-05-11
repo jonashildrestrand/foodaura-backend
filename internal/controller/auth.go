@@ -23,7 +23,7 @@ func GetLogin(v *view.Renderer) http.HandlerFunc {
 			},
 		}
 		if err := v.Render(w, "login.gohtml", data); err != nil {
-			http.Error(w, "render error", http.StatusInternalServerError)
+			serverError(w, r, "render login", err)
 		}
 	}
 }
@@ -66,7 +66,7 @@ func PostLogin(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 		// Generate a 32-byte random token and hex-encode it for the cookie.
 		raw := make([]byte, 32)
 		if _, err := rand.Read(raw); err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			serverError(w, r, "rand.Read", err)
 			return
 		}
 		token := hex.EncodeToString(raw) // 64-char hex string stored in the cookie.
@@ -77,7 +77,7 @@ func PostLogin(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 
 		expiresAt := time.Now().Add(30 * 24 * time.Hour)
 		if _, err := model.CreateSession(db, user.ID, tokenHash, expiresAt); err != nil {
-			http.Error(w, "session error", http.StatusInternalServerError)
+			serverError(w, r, "CreateSession", err)
 			return
 		}
 
@@ -114,8 +114,8 @@ func PostLogout(db *sql.DB) http.HandlerFunc {
 			Path:     "/",
 			MaxAge:   -1,
 			HttpOnly: true,
-			Secure:   true,
-			SameSite: http.SameSiteStrictMode,
+			Secure:   r.TLS != nil,
+			SameSite: http.SameSiteLaxMode,
 		})
 
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
