@@ -153,14 +153,20 @@ func txQueryScalar(tx *sql.Tx, query string, args ...any) (string, error) {
 			return "", err
 		}
 	}
+	// MariaDB stored procedures return an implicit status packet as a second
+	// result set. Calling NextResultSet() drains it so the connection is
+	// returned to the pool in a clean state.
+	for rows.NextResultSet() {}
 	return val, rows.Err()
 }
 
-// txExec runs a stored procedure on tx and discards the result set.
+// txExec runs a stored procedure on tx and discards all result sets.
 func txExec(tx *sql.Tx, query string, args ...any) error {
 	rows, err := tx.Query(query, args...)
 	if err != nil {
 		return err
 	}
-	return rows.Close()
+	defer rows.Close()
+	for rows.NextResultSet() {}
+	return rows.Err()
 }
