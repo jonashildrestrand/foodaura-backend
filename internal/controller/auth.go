@@ -87,8 +87,8 @@ func PostLogin(db *sql.DB, v *view.Renderer) http.HandlerFunc {
 			Path:     "/",
 			MaxAge:   2592000, // 30 days in seconds
 			HttpOnly: true,
-			Secure:   true,
-			SameSite: http.SameSiteStrictMode,
+			Secure:   r.TLS != nil,
+			SameSite: http.SameSiteLaxMode,
 		})
 
 		http.Redirect(w, r, "/plan", http.StatusSeeOther)

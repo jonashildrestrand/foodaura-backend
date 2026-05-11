@@ -131,8 +131,8 @@ func PostUsers(db *sql.DB) http.HandlerFunc {
 			Path:     "/",
 			MaxAge:   2592000,
 			HttpOnly: true,
-			Secure:   true,
-			SameSite: http.SameSiteStrictMode,
+			Secure:   r.TLS != nil,
+			SameSite: http.SameSiteLaxMode,
 		})
 
 		w.WriteHeader(http.StatusCreated)
