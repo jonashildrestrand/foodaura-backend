@@ -17,6 +17,18 @@ document.addEventListener('alpine:init', () => {
       diet_type: 'omnivore',
       avoid: ''
     },
+    goalLabels: {
+      lose_weight: 'Lose Weight',
+      maintain: 'Maintain Weight',
+      build_muscle: 'Build Muscle',
+      eat_better: 'Eat Better'
+    },
+    dietLabels: {
+      omnivore: 'Omnivore',
+      pescatarian: 'Pescatarian',
+      vegetarian: 'Vegetarian',
+      vegan: 'Vegan'
+    },
     error: '',
     loading: false,
     next() {
@@ -216,8 +228,8 @@ document.addEventListener('alpine:init', () => {
       <div><span>Email</span><span x-text="form.email"></span></div>
       <div><span>Name</span><span x-text="form.display_name"></span></div>
       <div><span>Household</span><span x-text="form.household_name"></span></div>
-      <div><span>Goal</span><span x-text="form.goal"></span></div>
-      <div><span>Diet</span><span x-text="form.diet_type"></span></div>
+      <div><span>Goal</span><span x-text="goalLabels[form.goal]"></span></div>
+      <div><span>Diet</span><span x-text="dietLabels[form.diet_type]"></span></div>
       <div x-show="form.avoid"><span>Avoiding</span><span x-text="form.avoid"></span></div>
     </div>
     <div class="fa-onb-actions">
