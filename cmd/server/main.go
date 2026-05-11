@@ -44,7 +44,7 @@ func main() {
 	})
 	r.Get("/login", controller.GetLogin(renderer))
 	r.Post("/login", controller.PostLogin(db, renderer))
-	r.Get("/onboarding", controller.GetOnboarding(renderer))
+	r.Get("/onboarding", controller.GetOnboarding(db, renderer))
 	r.Post("/users", controller.PostUsers(db))
 
 	// Invitation join link (requires auth — user must be registered first).

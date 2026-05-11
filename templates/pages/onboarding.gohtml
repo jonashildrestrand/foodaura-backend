@@ -3,31 +3,26 @@
 {{ define "main" }}
 <style>[x-cloak]{display:none}</style>
 <script>
+const FA_GOALS      = {{ toJS .Goals }};
+const FA_DIET_TYPES = {{ toJS .DietTypes }};
+
 document.addEventListener('alpine:init', () => {
   Alpine.data('onboarding', () => ({
     step: 0,
     stepNames: ['Account', 'Household', 'Invite', 'Diet & Goals', 'Review'],
+    goals:     FA_GOALS,
+    dietTypes: FA_DIET_TYPES,
+    goalLabels:     Object.fromEntries(FA_GOALS.map(g => [g.value, g.label])),
+    dietLabels:     Object.fromEntries(FA_DIET_TYPES.map(d => [d.value, d.label])),
     form: {
       email: '',
       display_name: '',
       password: '',
       household_name: '',
       invite_email: '',
-      goal: 'eat_better',
-      diet_type: 'omnivore',
+      goal: FA_GOALS.length ? FA_GOALS[0].value : '',
+      diet_type: FA_DIET_TYPES.length ? FA_DIET_TYPES[0].value : '',
       avoid: ''
-    },
-    goalLabels: {
-      lose_weight: 'Lose Weight',
-      maintain: 'Maintain Weight',
-      build_muscle: 'Build Muscle',
-      eat_better: 'Eat Better'
-    },
-    dietLabels: {
-      omnivore: 'Omnivore',
-      pescatarian: 'Pescatarian',
-      vegetarian: 'Vegetarian',
-      vegan: 'Vegan'
     },
     error: '',
     loading: false,
@@ -51,14 +46,14 @@ document.addEventListener('alpine:init', () => {
       this.loading = true;
       this.error = '';
       const body = {
-        email: this.form.email,
-        display_name: this.form.display_name,
-        password: this.form.password,
+        email:          this.form.email,
+        display_name:   this.form.display_name,
+        password:       this.form.password,
         household_name: this.form.household_name,
-        invite_email: this.form.invite_email,
-        goal: this.form.goal,
-        diet_type: this.form.diet_type,
-        dislikes: this.form.avoid.split(',').map(s => s.trim()).filter(Boolean)
+        invite_email:   this.form.invite_email,
+        goal:           this.form.goal,
+        diet_type:      this.form.diet_type,
+        dislikes:       this.form.avoid.split(',').map(s => s.trim()).filter(Boolean)
       };
       try {
         const res = await fetch('/users', {
@@ -81,7 +76,8 @@ document.addEventListener('alpine:init', () => {
 });
 </script>
 
-<div class="fa-onb" x-data="onboarding" x-cloak>
+<div class="fa-onb" x-data="onboarding" x-cloak
+     x-init="$nextTick(() => window.lucide && lucide.createIcons())">
   <header class="fa-onb-head">
     <span class="fa-logo-mark"><span class="fa-logo-core"></span></span>
     <ol class="fa-onb-steps">
@@ -166,44 +162,25 @@ document.addEventListener('alpine:init', () => {
     <div class="fa-field">
       <span class="fa-field-label">Primary goal</span>
       <div class="fa-onb-grid">
-        <label class="fa-onb-pick" :class="{'is-on': form.goal === 'lose_weight'}">
-          <input type="radio" name="goal" value="lose_weight" x-model="form.goal" hidden>
-          <i data-lucide="trending-down"></i>Lose weight
-        </label>
-        <label class="fa-onb-pick" :class="{'is-on': form.goal === 'maintain'}">
-          <input type="radio" name="goal" value="maintain" x-model="form.goal" hidden>
-          <i data-lucide="minus"></i>Maintain weight
-        </label>
-        <label class="fa-onb-pick" :class="{'is-on': form.goal === 'build_muscle'}">
-          <input type="radio" name="goal" value="build_muscle" x-model="form.goal" hidden>
-          <i data-lucide="dumbbell"></i>Build muscle
-        </label>
-        <label class="fa-onb-pick" :class="{'is-on': form.goal === 'eat_better'}">
-          <input type="radio" name="goal" value="eat_better" x-model="form.goal" hidden>
-          <i data-lucide="leaf"></i>Eat better
-        </label>
+        <template x-for="g in goals" :key="g.value">
+          <label class="fa-onb-pick" :class="{'is-on': form.goal === g.value}">
+            <input type="radio" name="goal" :value="g.value" x-model="form.goal" hidden>
+            <i :data-lucide="g.icon"></i>
+            <span x-text="g.label"></span>
+          </label>
+        </template>
       </div>
     </div>
 
     <div class="fa-field">
       <span class="fa-field-label">Diet type</span>
       <div class="fa-seg" role="radiogroup">
-        <label class="fa-seg-opt" :class="{'is-on': form.diet_type === 'omnivore'}">
-          <input type="radio" name="diet_type" value="omnivore" x-model="form.diet_type" hidden>
-          omnivore
-        </label>
-        <label class="fa-seg-opt" :class="{'is-on': form.diet_type === 'pescatarian'}">
-          <input type="radio" name="diet_type" value="pescatarian" x-model="form.diet_type" hidden>
-          pescatarian
-        </label>
-        <label class="fa-seg-opt" :class="{'is-on': form.diet_type === 'vegetarian'}">
-          <input type="radio" name="diet_type" value="vegetarian" x-model="form.diet_type" hidden>
-          vegetarian
-        </label>
-        <label class="fa-seg-opt" :class="{'is-on': form.diet_type === 'vegan'}">
-          <input type="radio" name="diet_type" value="vegan" x-model="form.diet_type" hidden>
-          vegan
-        </label>
+        <template x-for="d in dietTypes" :key="d.value">
+          <label class="fa-seg-opt" :class="{'is-on': form.diet_type === d.value}">
+            <input type="radio" name="diet_type" :value="d.value" x-model="form.diet_type" hidden>
+            <span x-text="d.label"></span>
+          </label>
+        </template>
       </div>
     </div>
 

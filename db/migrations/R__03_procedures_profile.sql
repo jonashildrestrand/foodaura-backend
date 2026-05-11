@@ -14,8 +14,8 @@ CREATE OR REPLACE PROCEDURE sp_profile_upsert(
   IN p_weight_kg      DECIMAL(5,2),
   IN p_height_cm      DECIMAL(5,2),
   IN p_activity_level ENUM('sedentary', 'light', 'moderate', 'active', 'very_active'),
-  IN p_goal           ENUM('lose_weight', 'maintain', 'build_muscle', 'eat_better'),
-  IN p_diet_type      ENUM('omnivore', 'vegetarian', 'vegan', 'pescatarian')
+  IN p_goal           VARCHAR(50),
+  IN p_diet_type      VARCHAR(50)
 )
 SQL SECURITY DEFINER
 BEGIN

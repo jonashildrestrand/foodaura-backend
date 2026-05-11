@@ -227,3 +227,20 @@ type LandingVM struct {
 	BaseVM
 }
 
+type GoalOption struct {
+	Value string `json:"value"`
+	Label string `json:"label"`
+	Icon  string `json:"icon"`
+}
+
+type DietTypeOption struct {
+	Value string `json:"value"`
+	Label string `json:"label"`
+}
+
+type OnboardingVM struct {
+	BaseVM
+	Goals     []GoalOption
+	DietTypes []DietTypeOption
+}
+

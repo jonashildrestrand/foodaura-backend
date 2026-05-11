@@ -1,6 +1,7 @@
 package view
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -11,6 +12,15 @@ import (
 var funcMap = template.FuncMap{
 	"inc":   func(i int) int { return i + 1 },
 	"slice": func(v ...string) []string { return v },
+	// toJS marshals v to JSON and returns it as template.JS so html/template
+	// embeds it verbatim inside <script> tags without HTML-escaping.
+	"toJS": func(v any) (template.JS, error) {
+		b, err := json.Marshal(v)
+		if err != nil {
+			return "", err
+		}
+		return template.JS(b), nil
+	},
 }
 
 // toastTmpl is defined inline so _layout.gohtml never errors when .Toast is nil.
